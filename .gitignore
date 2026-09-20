@@ -1,0 +1,37 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Data (regenerate locally)
+data/*.csv
+models/*.pkl
+results/*.csv
+results/*.png
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Office temp lock files
+~$*
+
+# Presentations (optional — remove this line if you want the PPT on GitHub)
+*.pptx

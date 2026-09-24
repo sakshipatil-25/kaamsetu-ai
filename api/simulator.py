@@ -1,7 +1,7 @@
 """
 In-memory simulator for Centralized vs Static vs Adaptive scheduling.
 Uses the same XGBoost + OR-Tools logic as the real distributed system,
-but simulates the scheduling behavior without Kafka.
+but simulates scheduling behavior without Kafka.
 """
 import time
 import random
@@ -17,8 +17,9 @@ class SimulatedWorker:
         self.jobs_processed = 0
         self.total_latency = 0.0
         self.max_latency = 0.0
-        self.cpu = 0.0
         self.queue = 0
+        # CPU load reflects work done (relative), not random noise
+        self.cpu_load = 0.0
 
     def process(self, matcher, job):
         start = time.perf_counter()
@@ -27,7 +28,8 @@ class SimulatedWorker:
         self.jobs_processed += 1
         self.total_latency += latency
         self.max_latency = max(self.max_latency, latency)
-        self.cpu = min(100.0, 30 + random.uniform(0, 40) + latency / 2)
+        # Each unit of work adds proportional load
+        self.cpu_load += latency / 100.0
         return matched, latency
 
     @property
@@ -40,7 +42,7 @@ class SimulatedWorker:
             'jobs_processed': self.jobs_processed,
             'avg_latency': round(self.avg_latency, 2),
             'max_latency': round(self.max_latency, 2),
-            'cpu': round(self.cpu, 2),
+            'cpu': round(self.cpu_load, 2),
         }
 
 
@@ -79,7 +81,8 @@ class Simulator:
         workers = [SimulatedWorker(f'worker-{i+1}') for i in range(n_workers)]
         jobs = self._sample_jobs(n_jobs)
         for job in jobs:
-            target = min(workers, key=lambda w: w.cpu + w.queue * 10)
+            # Choose worker with lowest cumulative load
+            target = min(workers, key=lambda w: w.cpu_load + w.queue * 10)
             target.queue += 1
             target.process(self.matcher, job)
             target.queue -= 1
@@ -90,7 +93,11 @@ class Simulator:
         max_lat = max(w.max_latency for w in workers)
         job_counts = [w.jobs_processed for w in workers]
         avg_jobs = sum(job_counts) / len(job_counts)
-        imbalance = (max(job_counts) - min(job_counts)) / max(1, avg_jobs) * 100
+        # Imbalance = spread of job counts relative to mean (bounded)
+        if avg_jobs > 0:
+            imbalance = (max(job_counts) - min(job_counts)) / avg_jobs * 100
+        else:
+            imbalance = 0.0
         total_time = sum(w.total_latency for w in workers) / 1000
 
         return {

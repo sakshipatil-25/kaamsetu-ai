@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getUser, clearAuth, apiFetch, API_URL } from './auth'
+import { WagePanel, GroupMatchPanel, TravelPanel } from './ResearchPanels'
 import './App.css'
 
 const SKILLS = [
@@ -59,7 +60,6 @@ const NAV_CONFIG = {
       { id: 'users',    label: 'User Management' },
     ]},
     { section: 'Research', items: [
-      { id: 'match',    label: 'Match Workers' },
       { id: 'simulate', label: 'Live Simulation' },
       { id: 'compare',  label: 'Research Results' },
     ]},
@@ -121,21 +121,18 @@ function App() {
       .catch(() => {})
   }, [])
 
-  // Load employer's own jobs on mount
   useEffect(() => {
     if (role === 'employer') {
       loadMyJobs()
     }
   }, [role])
 
-  // Load worker's available jobs when worker views jobs tab
   useEffect(() => {
     if (role === 'worker' && tab === 'jobs') {
       loadAvailableJobs()
     }
   }, [role, tab])
 
-  // Load admin data when admin views those tabs
   useEffect(() => {
     if (role !== 'admin') return
     if (tab === 'users' || tab === 'overview') {
@@ -191,7 +188,7 @@ function App() {
     }
   }
 
-    const acceptJob = async (jobId) => {
+  const acceptJob = async (jobId) => {
     try {
       const res = await apiFetch(`/jobs/${jobId}/accept`, { method: 'POST' })
       if (res.ok) {
@@ -276,7 +273,6 @@ function App() {
       </aside>
 
       <main className="main">
-        {/* ============ EMPLOYER / ADMIN: Match ============ */}
         {tab === 'match' && (
           <>
             <header className="page-head">
@@ -371,10 +367,28 @@ function App() {
                 )}
               </section>
             </div>
+
+            {results && (
+              <div className="research-grid">
+                <WagePanel
+                  skill={form.required_skill}
+                  numWorkers={form.num_workers_needed}
+                  durationHours={form.duration_hours}
+                />
+                <TravelPanel
+                  skill={form.required_skill}
+                  numWorkers={form.num_workers_needed}
+                />
+                <GroupMatchPanel
+                  skill={form.required_skill}
+                  numWorkers={form.num_workers_needed}
+                  budget={form.budget}
+                />
+              </div>
+            )}
           </>
         )}
 
-        {/* ============ EMPLOYER: My Jobs ============ */}
         {tab === 'myjobs' && (
           <>
             <header className="page-head">
@@ -419,8 +433,7 @@ function App() {
           </>
         )}
 
-        {/* ============ WORKER: Available Jobs ============ */}
-                {tab === 'jobs' && (
+        {tab === 'jobs' && (
           <>
             <header className="page-head">
               <div>
@@ -479,7 +492,6 @@ function App() {
           </>
         )}
 
-        {/* ============ WORKER: Availability ============ */}
         {tab === 'avail' && (
           <>
             <header className="page-head">
@@ -501,7 +513,6 @@ function App() {
           </>
         )}
 
-        {/* ============ WORKER: Profile ============ */}
         {tab === 'profile' && (
           <>
             <header className="page-head">
@@ -523,7 +534,6 @@ function App() {
           </>
         )}
 
-        {/* ============ ADMIN: Overview ============ */}
         {tab === 'overview' && (
           <>
             <header className="page-head">
@@ -558,7 +568,6 @@ function App() {
           </>
         )}
 
-        {/* ============ ADMIN: Users ============ */}
         {tab === 'users' && (
           <>
             <header className="page-head">
@@ -596,7 +605,6 @@ function App() {
           </>
         )}
 
-        {/* ============ SHARED: Simulation ============ */}
         {tab === 'simulate' && (
           <>
             <header className="page-head">
@@ -668,7 +676,6 @@ function App() {
           </>
         )}
 
-        {/* ============ SHARED: Compare ============ */}
         {tab === 'compare' && history && (
           <>
             <header className="page-head">
@@ -735,7 +742,6 @@ function App() {
           </>
         )}
 
-        {/* ============ SHARED: Architecture ============ */}
         {tab === 'arch' && (
           <>
             <header className="page-head">
@@ -797,7 +803,6 @@ function App() {
           </>
         )}
 
-        {/* ============ SHARED: How It Works ============ */}
         {tab === 'how' && (
           <>
             <header className="page-head">
@@ -834,10 +839,11 @@ function App() {
         <footer className="footer">
           <span>KaamSetu AI — M.Tech Research Prototype</span>
           <span>XGBoost · OR-Tools · Adaptive Distributed Matching</span>
+        </footer>
+
         {toast && (
           <div className="toast">{toast}</div>
         )}
-        </footer>
       </main>
     </div>
   )

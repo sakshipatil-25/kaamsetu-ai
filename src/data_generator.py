@@ -36,7 +36,10 @@ def generate_workers(n=1000):
             'availability': random.choice(['morning', 'afternoon', 'evening', 'full_day']),
             'expected_wage': random.randint(300, 1500),
             'rating': round(random.uniform(2.5, 5.0), 1),
-            'has_transport': random.choice([True, False])
+            'has_transport': random.choice([True, False]),
+            'gender': random.choice(['M', 'F']),          # NEW
+            'age': random.randint(18, 60),                 # NEW
+            'reliability_score': round(random.uniform(0.6, 1.0), 2),  # NEW
         })
     return pd.DataFrame(workers)
 

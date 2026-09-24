@@ -1,13 +1,14 @@
 from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 import sys
 sys.path.append('src')
 sys.path.append('api')
 from or_tools_matcher import WorkerMatcher
 from simulator import Simulator
 import auth as auth_module
+import services as research_services
 
 app = FastAPI(title="KaamSetu AI Research API")
 
@@ -82,14 +83,15 @@ def require_admin(user: dict = Depends(get_current_user)):
 def root():
     return {
         "service": "KaamSetu AI",
-        "version": "2.0",
+        "version": "2.1",
         "endpoints": [
             "/auth/signup", "/auth/login", "/auth/me",
             "/match", "/simulate", "/experiments", "/architecture",
-            "/admin/users", "/admin/stats"
+            "/admin/users", "/admin/stats",
+            "/jobs", "/jobs/{id}/accept",
+            "/research/wage", "/research/travel", "/research/group",
         ],
     }
-
 
 @app.get("/health")
 def health():
@@ -299,3 +301,112 @@ def accept_job_endpoint(job_id: int, user: dict = Depends(get_current_user)):
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return {"job": job}
+
+# ============================================================
+# Research endpoints — Wage, Travel, Group Matching
+# ============================================================
+class WageRequest(BaseModel):
+    required_skill: str
+    duration_hours: int = 8
+    num_workers: int = 1
+    month: Optional[int] = None
+
+
+class TravelRequest(BaseModel):
+    job_latitude: float
+    job_longitude: float
+    worker_ids: List[str]
+
+
+class GroupRequest(BaseModel):
+    required_skill: str
+    num_workers_needed: int
+    budget: int
+    male_required: Optional[int] = None
+    female_required: Optional[int] = None
+    max_distance_km: float = 50.0
+    job_latitude: float = 28.6139
+    job_longitude: float = 77.2090
+
+
+@app.post("/research/wage")
+def research_wage(req: WageRequest):
+    """Estimate expected wage per worker and total labour cost."""
+    return research_services.estimate_wage(
+        required_skill=req.required_skill,
+        duration_hours=req.duration_hours,
+        month=req.month,
+        num_workers=req.num_workers,
+    )
+
+
+@app.post("/research/travel")
+def research_travel(req: TravelRequest):
+    """Plan shared transportation for a set of workers going to a job."""
+    import pandas as pd
+    df = pd.read_csv('data/workers.csv')
+    matched = df[df['worker_id'].isin(req.worker_ids)]
+    worker_locations = [
+        {
+            'worker_id': row['worker_id'],
+            'latitude': row['latitude'],
+            'longitude': row['longitude'],
+        }
+        for _, row in matched.iterrows()
+    ]
+    return research_services.plan_travel(
+        job_lat=req.job_latitude,
+        job_lon=req.job_longitude,
+        worker_locations=worker_locations,
+    )
+
+
+@app.post("/research/group")
+def research_group(req: GroupRequest):
+    """
+    Multi-constraint group matching.
+    Returns the proposed AI solution plus two baselines for comparison.
+    """
+    import pandas as pd
+    df = pd.read_csv('data/workers.csv')
+    workers = df.to_dict('records')
+
+    ai_result = research_services.match_group(
+        available_workers=workers,
+        required_skill=req.required_skill,
+        num_workers_needed=req.num_workers_needed,
+        budget=req.budget,
+        male_required=req.male_required,
+        female_required=req.female_required,
+        max_distance_km=req.max_distance_km,
+        job_lat=req.job_latitude,
+        job_lon=req.job_longitude,
+    )
+
+    nearest = research_services.nearest_worker_baseline(
+        available_workers=workers,
+        required_skill=req.required_skill,
+        num_workers_needed=req.num_workers_needed,
+        job_lat=req.job_latitude,
+        job_lon=req.job_longitude,
+    )
+
+    skill = research_services.skill_based_baseline(
+        available_workers=workers,
+        required_skill=req.required_skill,
+        num_workers_needed=req.num_workers_needed,
+    )
+
+    # Wage estimation for comparison
+    wage = research_services.estimate_wage(
+        required_skill=req.required_skill,
+        duration_hours=8,
+        num_workers=req.num_workers_needed,
+    )
+
+    return {
+        'proposed': ai_result,
+        'baseline_nearest': nearest,
+        'baseline_skill': skill,
+        'wage_estimate': wage,
+    }

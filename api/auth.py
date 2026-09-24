@@ -1,9 +1,10 @@
 """
-KaamSetu AI — Authentication Module
+KaamSetu AI — Authentication & Jobs Module
 JWT-based auth with three roles: employer, worker, admin.
-Users stored in SQLite for zero-config deployment.
+Users and jobs stored in SQLite for zero-config deployment.
 """
 import os
+import json
 import sqlite3
 import bcrypt
 import jwt
@@ -26,9 +27,10 @@ TOKEN_EXPIRE_HOURS = 24 * 7  # 7 days
 # Database setup
 # ============================================================
 def init_db():
-    """Create users table if it doesn't exist."""
+    """Create users and jobs tables if they don't exist."""
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
+
     cur.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,6 +44,26 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS jobs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employer_id INTEGER NOT NULL,
+            employer_name TEXT NOT NULL,
+            required_skill TEXT NOT NULL,
+            num_workers_needed INTEGER NOT NULL,
+            budget INTEGER NOT NULL,
+            duration_hours INTEGER NOT NULL,
+            latitude REAL DEFAULT 28.6139,
+            longitude REAL DEFAULT 77.2090,
+            status TEXT DEFAULT 'open',
+            accepted_by TEXT DEFAULT '[]',
+            matched_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (employer_id) REFERENCES users(id)
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -200,6 +222,86 @@ def user_to_public(user: dict) -> dict:
         'skill': user.get('skill'),
         'created_at': str(user.get('created_at', '')),
     }
+
+
+# ============================================================
+# Job CRUD
+# ============================================================
+def create_job(employer_id: int, employer_name: str, required_skill: str,
+               num_workers_needed: int, budget: int, duration_hours: int,
+               latitude: float = 28.6139, longitude: float = 77.2090,
+               matched_count: int = 0):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute('''
+        INSERT INTO jobs (employer_id, employer_name, required_skill, num_workers_needed,
+                          budget, duration_hours, latitude, longitude, matched_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (employer_id, employer_name, required_skill, num_workers_needed,
+          budget, duration_hours, latitude, longitude, matched_count))
+    conn.commit()
+    job_id = cur.lastrowid
+    conn.close()
+    return get_job_by_id(job_id)
+
+
+def get_job_by_id(job_id: int):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM jobs WHERE id = ?', (job_id,))
+    row = cur.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def list_jobs(status: str = None, skill: str = None, employer_id: int = None):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    query = 'SELECT * FROM jobs WHERE 1=1'
+    params = []
+    if status:
+        query += ' AND status = ?'
+        params.append(status)
+    if skill:
+        query += ' AND required_skill = ?'
+        params.append(skill)
+    if employer_id:
+        query += ' AND employer_id = ?'
+        params.append(employer_id)
+    query += ' ORDER BY created_at DESC'
+    cur.execute(query, params)
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def accept_job(job_id: int, worker_name: str):
+    """Add worker to job's accepted list."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM jobs WHERE id = ?', (job_id,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return None
+    accepted = json.loads(row['accepted_by'] or '[]')
+    if worker_name in accepted:
+        conn.close()
+        return dict(row)
+    accepted.append(worker_name)
+    new_status = 'filled' if len(accepted) >= row['num_workers_needed'] else 'open'
+    cur.execute(
+        'UPDATE jobs SET accepted_by = ?, status = ? WHERE id = ?',
+        (json.dumps(accepted), new_status, job_id)
+    )
+    conn.commit()
+    cur.execute('SELECT * FROM jobs WHERE id = ?', (job_id,))
+    updated = cur.fetchone()
+    conn.close()
+    return dict(updated)
 
 
 # ============================================================

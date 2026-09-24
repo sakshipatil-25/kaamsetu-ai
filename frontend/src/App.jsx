@@ -110,12 +110,30 @@ function App() {
   const [adminUsers, setAdminUsers] = useState([])
   const [adminStats, setAdminStats] = useState(null)
 
+  // Worker state
+  const [availableJobs, setAvailableJobs] = useState([])
+  const [toast, setToast] = useState(null)
+
   useEffect(() => {
     fetch(`${API_URL}/experiments`)
       .then((r) => r.json())
       .then(setHistory)
       .catch(() => {})
   }, [])
+
+  // Load employer's own jobs on mount
+  useEffect(() => {
+    if (role === 'employer') {
+      loadMyJobs()
+    }
+  }, [role])
+
+  // Load worker's available jobs when worker views jobs tab
+  useEffect(() => {
+    if (role === 'worker' && tab === 'jobs') {
+      loadAvailableJobs()
+    }
+  }, [role, tab])
 
   // Load admin data when admin views those tabs
   useEffect(() => {
@@ -132,27 +150,63 @@ function App() {
     setError(null)
     setResults(null)
     try {
-      const res = await fetch(`${API_URL}/match`, {
+      const res = await apiFetch('/jobs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
       if (!res.ok) throw new Error(`Server responded with status ${res.status}`)
       const data = await res.json()
-      setResults(data)
-      // Save job to my jobs
-      setMyJobs(prev => [{
-        id: Date.now(),
-        skill: form.required_skill,
-        workers: form.num_workers_needed,
-        budget: form.budget,
-        matched: data.count,
-        created: new Date().toLocaleString(),
-      }, ...prev])
+      setResults({
+        matched_workers: data.matched_workers || [],
+        count: (data.matched_workers || []).length,
+      })
+      loadMyJobs()
     } catch (err) {
       setError(err.message)
     }
     setLoading(false)
+  }
+
+  const loadMyJobs = async () => {
+    try {
+      const res = await apiFetch('/jobs?mine=true')
+      if (res.ok) {
+        const data = await res.json()
+        setMyJobs(data.jobs || [])
+      }
+    } catch (err) {
+      // silent
+    }
+  }
+
+  const loadAvailableJobs = async () => {
+    try {
+      const res = await apiFetch('/jobs')
+      if (res.ok) {
+        const data = await res.json()
+        setAvailableJobs(data.jobs || [])
+      }
+    } catch (err) {
+      // silent
+    }
+  }
+
+    const acceptJob = async (jobId) => {
+    try {
+      const res = await apiFetch(`/jobs/${jobId}/accept`, { method: 'POST' })
+      if (res.ok) {
+        await loadAvailableJobs()
+        setToast('✓ Job accepted successfully')
+        setTimeout(() => setToast(null), 3000)
+      } else {
+        const err = await res.json()
+        setToast(err.detail || 'Failed to accept job')
+        setTimeout(() => setToast(null), 3000)
+      }
+    } catch (err) {
+      setToast('Failed to accept job')
+      setTimeout(() => setToast(null), 3000)
+    }
   }
 
   const runSimulation = async () => {
@@ -343,17 +397,19 @@ function App() {
                       <th>Workers</th>
                       <th>Budget</th>
                       <th>Matched</th>
+                      <th>Status</th>
                       <th>Posted</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {myJobs.map(j => (
+                    {myJobs.map((j) => (
                       <tr key={j.id}>
-                        <td>{j.skill.replace(/_/g, ' ')}</td>
-                        <td>{j.workers}</td>
+                        <td>{j.required_skill.replace(/_/g, ' ')}</td>
+                        <td>{j.num_workers_needed}</td>
                         <td>₹{j.budget}</td>
-                        <td><span className="badge success">{j.matched}</span></td>
-                        <td>{j.created}</td>
+                        <td><span className="badge success">{j.matched_count}</span></td>
+                        <td>{j.status}</td>
+                        <td>{j.created_at}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -364,19 +420,61 @@ function App() {
         )}
 
         {/* ============ WORKER: Available Jobs ============ */}
-        {tab === 'jobs' && (
+                {tab === 'jobs' && (
           <>
             <header className="page-head">
               <div>
                 <h2>Available Jobs</h2>
-                <p>Jobs matching your skill: {user?.skill?.replace(/_/g, ' ') || 'not set'}</p>
+                <p>
+                  All open jobs — your skill matches ({user?.skill?.replace(/_/g, ' ') || 'none'}) appear first
+                </p>
               </div>
+              <button className="primary-btn compact" onClick={loadAvailableJobs}>
+                Refresh
+              </button>
             </header>
             <div className="card">
-              <div className="empty">
-                <div className="empty-title">Feature coming soon</div>
-                <p>Job listings will appear here once employers start posting them</p>
-              </div>
+              {availableJobs.length === 0 ? (
+                <div className="empty">
+                  <div className="empty-title">No open jobs yet</div>
+                  <p>New jobs will appear here when employers post them</p>
+                </div>
+              ) : (
+                <ul className="job-list">
+                  {availableJobs.map((j) => (
+                    <li
+                      key={j.id}
+                      className={`job-item ${j.accepted_by_me ? 'job-accepted' : ''}`}
+                    >
+                      <div className="job-main">
+                        <strong>{j.required_skill.replace(/_/g, ' ')}</strong>
+                        <span>Posted by {j.employer_name}</span>
+                      </div>
+                      <div className="job-meta">
+                        <span>{j.num_workers_needed} workers</span>
+                        <span>₹{j.budget}</span>
+                        <span>{j.duration_hours} hrs</span>
+                        {j.accepted_count > 0 && (
+                          <span className="accepted-count">
+                            {j.accepted_count}/{j.num_workers_needed} accepted
+                          </span>
+                        )}
+                      </div>
+                      {j.accepted_by_me ? (
+                        <span className="accepted-badge">✓ Accepted</span>
+                      ) : (
+                        <button
+                          className="accept-btn"
+                          onClick={() => acceptJob(j.id)}
+                          disabled={j.status === 'filled'}
+                        >
+                          {j.status === 'filled' ? 'Filled' : 'Accept'}
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </>
         )}
@@ -736,6 +834,9 @@ function App() {
         <footer className="footer">
           <span>KaamSetu AI — M.Tech Research Prototype</span>
           <span>XGBoost · OR-Tools · Adaptive Distributed Matching</span>
+        {toast && (
+          <div className="toast">{toast}</div>
+        )}
         </footer>
       </main>
     </div>

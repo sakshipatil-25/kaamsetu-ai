@@ -218,3 +218,84 @@ def architecture():
         ],
         "frozen_components": ["XGBoost suitability model", "OR-Tools CP-SAT matcher"],
     }
+# ============================================================
+# Job endpoints
+# ============================================================
+class JobPostRequest(BaseModel):
+    required_skill: str
+    num_workers_needed: int
+    budget: int
+    duration_hours: int
+    latitude: Optional[float] = 28.6139
+    longitude: Optional[float] = 77.2090
+
+
+class JobAcceptRequest(BaseModel):
+    pass  # Worker identity comes from the JWT token
+
+
+@app.post("/jobs")
+def post_job(req: JobPostRequest, user: dict = Depends(get_current_user)):
+    """Employer posts a new job."""
+    if user['role'] != 'employer':
+        raise HTTPException(status_code=403, detail="Only employers can post jobs")
+
+    # Run the AI matcher to get candidate workers
+    job_dict = req.model_dump()
+    try:
+        matched = matcher.match(job_dict)
+    except Exception:
+        matched = []
+
+    job = auth_module.create_job(
+        employer_id=user['id'],
+        employer_name=user['full_name'],
+        required_skill=req.required_skill,
+        num_workers_needed=req.num_workers_needed,
+        budget=req.budget,
+        duration_hours=req.duration_hours,
+        latitude=req.latitude,
+        longitude=req.longitude,
+        matched_count=len(matched),
+    )
+    return {"job": job, "matched_workers": matched}
+
+
+@app.get("/jobs")
+def get_jobs(
+    status: Optional[str] = None,
+    skill: Optional[str] = None,
+    mine: Optional[bool] = False,
+    user: dict = Depends(get_current_user),
+):
+    """List jobs. Workers see all open jobs; employers see their own or all."""
+    employer_id = user['id'] if (mine and user['role'] == 'employer') else None
+
+    jobs = auth_module.list_jobs(
+        status=status or ('open' if user['role'] == 'worker' else None),
+        skill=skill,
+        employer_id=employer_id,
+    )
+
+    # For workers, sort so their skill matches appear first
+    if user['role'] == 'worker' and user.get('skill'):
+        worker_skill = user['skill']
+        jobs.sort(key=lambda j: 0 if j['required_skill'] == worker_skill else 1)
+
+    # Annotate each job with whether this user has accepted it
+    import json as _json
+    for j in jobs:
+        accepted = _json.loads(j.get('accepted_by') or '[]')
+        j['accepted_by_me'] = user['full_name'] in accepted
+        j['accepted_count'] = len(accepted)
+
+    return {"count": len(jobs), "jobs": jobs}
+@app.post("/jobs/{job_id}/accept")
+def accept_job_endpoint(job_id: int, user: dict = Depends(get_current_user)):
+    """Worker accepts a job."""
+    if user['role'] != 'worker':
+        raise HTTPException(status_code=403, detail="Only workers can accept jobs")
+    job = auth_module.accept_job(job_id, user['full_name'])
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {"job": job}

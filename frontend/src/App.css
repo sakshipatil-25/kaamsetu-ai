@@ -1197,3 +1197,247 @@ body {
   .avail-grid { grid-template-columns: repeat(2, 1fr); }
   .profile-grid { grid-template-columns: 1fr; }
 }
+/* ---------- Job list (worker view) ---------- */
+.job-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.job-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #fdfcfa;
+  border: 1px solid #e8e5dc;
+  border-radius: 10px;
+  transition: all 0.15s;
+}
+
+.job-item:hover {
+  border-color: #2d5a3d;
+  background: #fff;
+}
+
+.job-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.job-main strong {
+  font-size: 14px;
+  color: #1a1a1a;
+  text-transform: capitalize;
+}
+
+.job-main span {
+  font-size: 11.5px;
+  color: #6b6b6b;
+}
+
+.job-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #4a4a4a;
+  font-family: Consolas, monospace;
+}
+
+.accept-btn {
+  padding: 8px 18px;
+  background: #2d5a3d;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.accept-btn:hover:not(:disabled) {
+  background: #244a32;
+}
+
+.accept-btn:disabled {
+  background: #9a9a9a;
+  cursor: not-allowed;
+}
+
+/* ---------- Data tables ---------- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid #e8e5dc;
+}
+
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0ece0;
+  color: #2a2a2a;
+}
+
+.data-table tr:hover {
+  background: #fdfcfa;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.role-badge.role-employer {
+  background: #e8f0e9;
+  color: #2d5a3d;
+}
+
+.role-badge.role-worker {
+  background: #fdf6e3;
+  color: #b8860b;
+}
+
+.role-badge.role-admin {
+  background: #f7ebeb;
+  color: #a63d3d;
+}
+
+/* ---------- Worker Availability ---------- */
+.avail-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.avail-tile {
+  padding: 16px 12px;
+  background: #fdfcfa;
+  border: 1px solid #e8e5dc;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.avail-tile:hover {
+  border-color: #2d5a3d;
+  background: #fff;
+}
+
+.avail-day {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.avail-status {
+  font-size: 10.5px;
+  color: #3d7a4d;
+  font-weight: 500;
+}
+
+/* ---------- Profile ---------- */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.profile-item {
+  padding: 14px 16px;
+  background: #fdfcfa;
+  border: 1px solid #e8e5dc;
+  border-radius: 9px;
+}
+
+.profile-item span {
+  display: block;
+  font-size: 11px;
+  color: #6b6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.profile-item strong {
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .avail-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-grid { grid-template-columns: 1fr; }
+}
+/* ---------- Job accepted state ---------- */
+.job-item.job-accepted {
+  border-color: #3d7a4d;
+  background: #f4faf6;
+}
+
+.accepted-badge {
+  padding: 8px 16px;
+  background: #e8f0e9;
+  color: #2d5a3d;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.accepted-count {
+  color: #3d7a4d;
+  font-weight: 600;
+}
+
+/* ---------- Toast notification ---------- */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  animation: toastIn 0.3s ease;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

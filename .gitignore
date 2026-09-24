@@ -35,3 +35,8 @@ Thumbs.db
 
 # Presentations (optional — remove this line if you want the PPT on GitHub)
 *.pptx
+
+# Local SQLite user database
+data/users.db
+data/users.db-journal
+data/*.db

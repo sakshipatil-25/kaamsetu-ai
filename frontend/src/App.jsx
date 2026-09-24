@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { getUser, clearAuth } from './auth'
 import './App.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -26,10 +28,22 @@ const SETUP_COLORS = {
 }
 
 function App() {
+  const navigate = useNavigate()
+  const user = getUser()
+
+  const handleLogout = () => {
+    clearAuth()
+    navigate('/login')
+  }
+
   const [tab, setTab] = useState('match')
   const [form, setForm] = useState({
-    required_skill: 'plumbing', latitude: 28.6139, longitude: 77.2090,
-    num_workers_needed: 2, budget: 5000, duration_hours: 4,
+    required_skill: 'farming_seeds',
+    latitude: 28.6139,
+    longitude: 77.2090,
+    num_workers_needed: 2,
+    budget: 5000,
+    duration_hours: 4,
   })
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -39,12 +53,17 @@ function App() {
   const [history, setHistory] = useState(null)
 
   useEffect(() => {
-    fetch(`${API_URL}/experiments`).then(r => r.json()).then(setHistory).catch(() => {})
+    fetch(`${API_URL}/experiments`)
+      .then((r) => r.json())
+      .then(setHistory)
+      .catch(() => {})
   }, [])
 
   const submitMatch = async (e) => {
     e.preventDefault()
-    setLoading(true); setError(null); setResults(null)
+    setLoading(true)
+    setError(null)
+    setResults(null)
     try {
       const res = await fetch(`${API_URL}/match`, {
         method: 'POST',
@@ -53,12 +72,16 @@ function App() {
       })
       if (!res.ok) throw new Error(`Server responded with status ${res.status}`)
       setResults(await res.json())
-    } catch (err) { setError(err.message) }
+    } catch (err) {
+      setError(err.message)
+    }
     setLoading(false)
   }
 
   const runSimulation = async () => {
-    setSimLoading(true); setError(null); setSimResults(null)
+    setSimLoading(true)
+    setError(null)
+    setSimResults(null)
     try {
       const res = await fetch(`${API_URL}/simulate`, {
         method: 'POST',
@@ -67,7 +90,9 @@ function App() {
       })
       if (!res.ok) throw new Error(`Server responded with status ${res.status}`)
       setSimResults(await res.json())
-    } catch (err) { setError(err.message) }
+    } catch (err) {
+      setError(err.message)
+    }
     setSimLoading(false)
   }
 
@@ -104,11 +129,20 @@ function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="status-row">
-            <span className="status-dot" />
-            <span>Backend Connected</span>
-          </div>
-          <div className="sidebar-meta">M.Tech Research · 2025–26</div>
+          {user && (
+            <div className="user-block">
+              <div className="user-avatar">
+                {user.full_name?.charAt(0)?.toUpperCase() || '?'}
+              </div>
+              <div className="user-info">
+                <div className="user-name">{user.full_name}</div>
+                <div className="user-role">{user.role}</div>
+              </div>
+            </div>
+          )}
+          <button className="logout-btn" onClick={handleLogout}>
+            Sign out
+          </button>
         </div>
       </aside>
 
@@ -145,10 +179,13 @@ function App() {
                 <form onSubmit={submitMatch}>
                   <label className="field-label">Required Skill</label>
                   <div className="skill-grid">
-                    {SKILLS.map(s => (
-                      <button type="button" key={s.value}
+                    {SKILLS.map((s) => (
+                      <button
+                        type="button"
+                        key={s.value}
                         className={`skill-tile ${form.required_skill === s.value ? 'selected' : ''}`}
-                        onClick={() => setForm({ ...form, required_skill: s.value })}>
+                        onClick={() => setForm({ ...form, required_skill: s.value })}
+                      >
                         {s.label}
                       </button>
                     ))}
@@ -157,18 +194,31 @@ function App() {
                   <div className="row">
                     <div className="field">
                       <label className="field-label">Workers Needed</label>
-                      <input type="number" min="1" value={form.num_workers_needed}
-                        onChange={e => setForm({ ...form, num_workers_needed: +e.target.value })} />
+                      <input
+                        type="number"
+                        min="1"
+                        value={form.num_workers_needed}
+                        onChange={(e) => setForm({ ...form, num_workers_needed: +e.target.value })}
+                      />
                     </div>
                     <div className="field">
                       <label className="field-label">Budget (₹)</label>
-                      <input type="number" min="100" step="100" value={form.budget}
-                        onChange={e => setForm({ ...form, budget: +e.target.value })} />
+                      <input
+                        type="number"
+                        min="100"
+                        step="100"
+                        value={form.budget}
+                        onChange={(e) => setForm({ ...form, budget: +e.target.value })}
+                      />
                     </div>
                     <div className="field">
                       <label className="field-label">Duration (hrs)</label>
-                      <input type="number" min="1" value={form.duration_hours}
-                        onChange={e => setForm({ ...form, duration_hours: +e.target.value })} />
+                      <input
+                        type="number"
+                        min="1"
+                        value={form.duration_hours}
+                        onChange={(e) => setForm({ ...form, duration_hours: +e.target.value })}
+                      />
                     </div>
                   </div>
 
@@ -257,15 +307,20 @@ function App() {
             {simResults && (
               <>
                 <div className="setup-grid">
-                  {['centralized', 'static', 'adaptive'].map(name => {
+                  {['centralized', 'static', 'adaptive'].map((name) => {
                     const r = simResults[name]
                     return (
-                      <div key={name} className="card setup-card"
-                        style={{ borderTop: `3px solid ${SETUP_COLORS[name]}` }}>
+                      <div
+                        key={name}
+                        className="card setup-card"
+                        style={{ borderTop: `3px solid ${SETUP_COLORS[name]}` }}
+                      >
                         <div className="card-head">
                           <h3 style={{ textTransform: 'capitalize' }}>{name}</h3>
-                          <span className="badge"
-                            style={{ background: `${SETUP_COLORS[name]}15`, color: SETUP_COLORS[name] }}>
+                          <span
+                            className="badge"
+                            style={{ background: `${SETUP_COLORS[name]}15`, color: SETUP_COLORS[name] }}
+                          >
                             {r.workers.length} {r.workers.length === 1 ? 'node' : 'nodes'}
                           </span>
                         </div>
@@ -293,7 +348,7 @@ function App() {
                         </div>
 
                         <div className="worker-mini-grid">
-                          {r.workers.map(w => (
+                          {r.workers.map((w) => (
                             <div key={w.name} className="worker-mini">
                               <span className="wm-name">{w.name}</span>
                               <span className="wm-jobs">{w.jobs_processed} jobs</span>
@@ -344,15 +399,20 @@ function App() {
             </header>
 
             <div className="setup-grid">
-              {['centralized', 'static', 'adaptive'].map(name => {
+              {['centralized', 'static', 'adaptive'].map((name) => {
                 const r = history[name]
                 return (
-                  <div key={name} className="card setup-card"
-                    style={{ borderTop: `3px solid ${SETUP_COLORS[name]}` }}>
+                  <div
+                    key={name}
+                    className="card setup-card"
+                    style={{ borderTop: `3px solid ${SETUP_COLORS[name]}` }}
+                  >
                     <div className="card-head">
                       <h3 style={{ textTransform: 'capitalize' }}>{name}</h3>
-                      <span className="badge"
-                        style={{ background: `${SETUP_COLORS[name]}15`, color: SETUP_COLORS[name] }}>
+                      <span
+                        className="badge"
+                        style={{ background: `${SETUP_COLORS[name]}15`, color: SETUP_COLORS[name] }}
+                      >
                         {r.nodes} {r.nodes === 1 ? 'node' : 'nodes'}
                       </span>
                     </div>
@@ -386,15 +446,17 @@ function App() {
             <div className="card">
               <div className="card-head"><h3>Load Imbalance Comparison</h3></div>
               <div className="chart-bars">
-                {['static', 'adaptive'].map(name => {
+                {['static', 'adaptive'].map((name) => {
                   const r = history[name]
-                  const pct = r.load_imbalance / 5 * 100
+                  const pct = (r.load_imbalance / 5) * 100
                   return (
                     <div key={name} className="chart-row">
                       <span className="chart-label">{name}</span>
                       <div className="chart-track">
-                        <div className="chart-fill"
-                          style={{ width: `${Math.min(pct, 100)}%`, background: SETUP_COLORS[name] }} />
+                        <div
+                          className="chart-fill"
+                          style={{ width: `${Math.min(pct, 100)}%`, background: SETUP_COLORS[name] }}
+                        />
                       </div>
                       <span className="chart-value">{r.load_imbalance}%</span>
                     </div>
@@ -471,12 +533,11 @@ function App() {
                   { name: 'Centralized', nodes: 1, sched: 'No distribution — a single worker processes all jobs', color: SETUP_COLORS.centralized },
                   { name: 'Static Distributed', nodes: 3, sched: 'Hash-based Kafka partitioning (job_id mod 3)', color: SETUP_COLORS.static },
                   { name: 'Adaptive Distributed', nodes: 3, sched: 'Weighted scoring: 0.5×CPU + 0.3×queue + 0.2×latency', color: SETUP_COLORS.adaptive },
-                ].map(s => (
+                ].map((s) => (
                   <div key={s.name} className="arch-item" style={{ borderLeft: `3px solid ${s.color}` }}>
                     <div className="arch-head">
                       <strong>{s.name}</strong>
-                      <span className="badge"
-                        style={{ background: `${s.color}15`, color: s.color }}>
+                      <span className="badge" style={{ background: `${s.color}15`, color: s.color }}>
                         {s.nodes} node{s.nodes > 1 ? 's' : ''}
                       </span>
                     </div>
@@ -507,7 +568,7 @@ function App() {
                   { n: '04', title: 'Optimizer selects the best group', desc: 'OR-Tools CP-SAT solves a constrained optimization: exactly N workers, within budget, maximizing aggregate suitability.' },
                   { n: '05', title: 'Adaptive scheduler routes the work', desc: 'The dispatcher selects the least-loaded node using a weighted score: 0.5×CPU + 0.3×queue + 0.2×latency.' },
                   { n: '06', title: 'Result returned to the employer', desc: 'Matched workers with individual suitability scores arrive typically within 15–25 milliseconds.' },
-                ].map(s => (
+                ].map((s) => (
                   <div key={s.n} className="flow-step">
                     <div className="flow-num">{s.n}</div>
                     <div className="flow-body">
@@ -529,7 +590,7 @@ function App() {
                   { title: 'Fair Wage Enforcement', desc: 'Workers are matched by their expected wage — eliminating undercutting by middlemen.' },
                   { title: 'Transport-Aware Assignment', desc: 'Workers with transport are prioritized for distant jobs; nearby jobs are matched to those without.' },
                   { title: 'Low-Bandwidth Operation', desc: 'Responses return in under 25 ms, functioning reliably on slow rural connections.' },
-                ].map(u => (
+                ].map((u) => (
                   <div key={u.title} className="usecase-item">
                     <strong>{u.title}</strong>
                     <p>{u.desc}</p>
@@ -581,7 +642,7 @@ function App() {
                   { value: '2.1%', label: 'Load imbalance (adaptive)' },
                   { value: '18%', label: 'CPU saved vs static' },
                   { value: '3', label: 'Distributed nodes' },
-                ].map(m => (
+                ].map((m) => (
                   <div key={m.label} className="metric-show">
                     <span className="metric-show-value">{m.value}</span>
                     <span className="metric-show-label">{m.label}</span>

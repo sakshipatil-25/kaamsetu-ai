@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getUser, clearAuth } from './auth'
+import { getUser, clearAuth, apiFetch, API_URL } from './auth'
 import './App.css'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const SKILLS = [
   { value: 'farming_seeds',      label: 'Hand-planting Seeds' },
@@ -27,16 +25,71 @@ const SETUP_COLORS = {
   adaptive: '#059669',
 }
 
+// ============================================================
+// Navigation config per role
+// ============================================================
+const NAV_CONFIG = {
+  employer: [
+    { section: 'Employer', items: [
+      { id: 'match',    label: 'Match Workers' },
+      { id: 'myjobs',   label: 'My Posted Jobs' },
+    ]},
+    { section: 'Research', items: [
+      { id: 'simulate', label: 'Live Simulation' },
+      { id: 'compare',  label: 'Research Results' },
+    ]},
+    { section: 'Documentation', items: [
+      { id: 'arch', label: 'Architecture' },
+      { id: 'how',  label: 'How It Works' },
+    ]},
+  ],
+  worker: [
+    { section: 'Worker', items: [
+      { id: 'jobs',     label: 'Available Jobs' },
+      { id: 'avail',    label: 'My Availability' },
+      { id: 'profile',  label: 'My Profile' },
+    ]},
+    { section: 'Documentation', items: [
+      { id: 'how',  label: 'How It Works' },
+    ]},
+  ],
+  admin: [
+    { section: 'Admin', items: [
+      { id: 'overview', label: 'System Overview' },
+      { id: 'users',    label: 'User Management' },
+    ]},
+    { section: 'Research', items: [
+      { id: 'match',    label: 'Match Workers' },
+      { id: 'simulate', label: 'Live Simulation' },
+      { id: 'compare',  label: 'Research Results' },
+    ]},
+    { section: 'Documentation', items: [
+      { id: 'arch', label: 'Architecture' },
+      { id: 'how',  label: 'How It Works' },
+    ]},
+  ],
+}
+
+const DEFAULT_TAB = {
+  employer: 'match',
+  worker: 'jobs',
+  admin: 'overview',
+}
+
+
 function App() {
   const navigate = useNavigate()
   const user = getUser()
+  const role = user?.role || 'employer'
 
   const handleLogout = () => {
     clearAuth()
     navigate('/login')
   }
 
-  const [tab, setTab] = useState('match')
+  const [tab, setTab] = useState(DEFAULT_TAB[role] || 'match')
+
+  // Employer state
   const [form, setForm] = useState({
     required_skill: 'farming_seeds',
     latitude: 28.6139,
@@ -51,6 +104,11 @@ function App() {
   const [simResults, setSimResults] = useState(null)
   const [simLoading, setSimLoading] = useState(false)
   const [history, setHistory] = useState(null)
+  const [myJobs, setMyJobs] = useState([])
+
+  // Admin state
+  const [adminUsers, setAdminUsers] = useState([])
+  const [adminStats, setAdminStats] = useState(null)
 
   useEffect(() => {
     fetch(`${API_URL}/experiments`)
@@ -58,6 +116,15 @@ function App() {
       .then(setHistory)
       .catch(() => {})
   }, [])
+
+  // Load admin data when admin views those tabs
+  useEffect(() => {
+    if (role !== 'admin') return
+    if (tab === 'users' || tab === 'overview') {
+      apiFetch('/admin/users').then(r => r.json()).then(d => setAdminUsers(d.users || [])).catch(() => {})
+      apiFetch('/admin/stats').then(r => r.json()).then(setAdminStats).catch(() => {})
+    }
+  }, [tab, role])
 
   const submitMatch = async (e) => {
     e.preventDefault()
@@ -71,7 +138,17 @@ function App() {
         body: JSON.stringify(form),
       })
       if (!res.ok) throw new Error(`Server responded with status ${res.status}`)
-      setResults(await res.json())
+      const data = await res.json()
+      setResults(data)
+      // Save job to my jobs
+      setMyJobs(prev => [{
+        id: Date.now(),
+        skill: form.required_skill,
+        workers: form.num_workers_needed,
+        budget: form.budget,
+        matched: data.count,
+        created: new Date().toLocaleString(),
+      }, ...prev])
     } catch (err) {
       setError(err.message)
     }
@@ -96,6 +173,8 @@ function App() {
     setSimLoading(false)
   }
 
+  const navGroups = NAV_CONFIG[role] || NAV_CONFIG.employer
+
   return (
     <div className="app">
       <aside className="sidebar">
@@ -108,24 +187,20 @@ function App() {
         </div>
 
         <nav className="nav">
-          <div className="nav-section">Research Platform</div>
-          <a className={`nav-item ${tab === 'match' ? 'active' : ''}`} onClick={() => setTab('match')}>
-            <span className="nav-dot" /> Match Workers
-          </a>
-          <a className={`nav-item ${tab === 'simulate' ? 'active' : ''}`} onClick={() => setTab('simulate')}>
-            <span className="nav-dot" /> Live Simulation
-          </a>
-          <a className={`nav-item ${tab === 'compare' ? 'active' : ''}`} onClick={() => setTab('compare')}>
-            <span className="nav-dot" /> Research Results
-          </a>
-
-          <div className="nav-section">Documentation</div>
-          <a className={`nav-item ${tab === 'arch' ? 'active' : ''}`} onClick={() => setTab('arch')}>
-            <span className="nav-dot" /> Architecture
-          </a>
-          <a className={`nav-item ${tab === 'how' ? 'active' : ''}`} onClick={() => setTab('how')}>
-            <span className="nav-dot" /> How It Works
-          </a>
+          {navGroups.map(group => (
+            <div key={group.section}>
+              <div className="nav-section">{group.section}</div>
+              {group.items.map(item => (
+                <a
+                  key={item.id}
+                  className={`nav-item ${tab === item.id ? 'active' : ''}`}
+                  onClick={() => setTab(item.id)}
+                >
+                  <span className="nav-dot" /> {item.label}
+                </a>
+              ))}
+            </div>
+          ))}
         </nav>
 
         <div className="sidebar-footer">
@@ -147,6 +222,7 @@ function App() {
       </aside>
 
       <main className="main">
+        {/* ============ EMPLOYER / ADMIN: Match ============ */}
         {tab === 'match' && (
           <>
             <header className="page-head">
@@ -155,18 +231,9 @@ function App() {
                 <p>Submit a job request and receive AI-matched workers in real time</p>
               </div>
               <div className="stat-pills">
-                <div className="pill">
-                  <span className="pill-label">Workers</span>
-                  <span className="pill-value">1,000</span>
-                </div>
-                <div className="pill">
-                  <span className="pill-label">Avg Match</span>
-                  <span className="pill-value">92%</span>
-                </div>
-                <div className="pill">
-                  <span className="pill-label">Latency</span>
-                  <span className="pill-value">25 ms</span>
-                </div>
+                <div className="pill"><span className="pill-label">Workers</span><span className="pill-value">1,000</span></div>
+                <div className="pill"><span className="pill-label">Avg Match</span><span className="pill-value">92%</span></div>
+                <div className="pill"><span className="pill-label">Latency</span><span className="pill-value">25 ms</span></div>
               </div>
             </header>
 
@@ -179,7 +246,7 @@ function App() {
                 <form onSubmit={submitMatch}>
                   <label className="field-label">Required Skill</label>
                   <div className="skill-grid">
-                    {SKILLS.map((s) => (
+                    {SKILLS.map(s => (
                       <button
                         type="button"
                         key={s.value}
@@ -190,38 +257,23 @@ function App() {
                       </button>
                     ))}
                   </div>
-
                   <div className="row">
                     <div className="field">
                       <label className="field-label">Workers Needed</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={form.num_workers_needed}
-                        onChange={(e) => setForm({ ...form, num_workers_needed: +e.target.value })}
-                      />
+                      <input type="number" min="1" value={form.num_workers_needed}
+                        onChange={e => setForm({ ...form, num_workers_needed: +e.target.value })} />
                     </div>
                     <div className="field">
                       <label className="field-label">Budget (₹)</label>
-                      <input
-                        type="number"
-                        min="100"
-                        step="100"
-                        value={form.budget}
-                        onChange={(e) => setForm({ ...form, budget: +e.target.value })}
-                      />
+                      <input type="number" min="100" step="100" value={form.budget}
+                        onChange={e => setForm({ ...form, budget: +e.target.value })} />
                     </div>
                     <div className="field">
                       <label className="field-label">Duration (hrs)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={form.duration_hours}
-                        onChange={(e) => setForm({ ...form, duration_hours: +e.target.value })}
-                      />
+                      <input type="number" min="1" value={form.duration_hours}
+                        onChange={e => setForm({ ...form, duration_hours: +e.target.value })} />
                     </div>
                   </div>
-
                   <button className="primary-btn" disabled={loading}>
                     {loading ? <><span className="spinner" /> Matching…</> : <>Find Best Workers →</>}
                   </button>
@@ -233,23 +285,19 @@ function App() {
                   <h3>Matched Workers</h3>
                   {results && <span className="badge success">{results.count} found</span>}
                 </div>
-
                 {error && <div className="error"><strong>Error:</strong> {error}</div>}
-
                 {!results && !loading && (
                   <div className="empty">
                     <div className="empty-title">No results yet</div>
                     <p>Submit a job request to view matched workers</p>
                   </div>
                 )}
-
                 {loading && (
                   <div className="empty">
                     <div className="spinner large" />
                     <p>Running AI matching…</p>
                   </div>
                 )}
-
                 {results && (
                   <ul className="worker-list">
                     {results.matched_workers.map((w, i) => (
@@ -272,6 +320,185 @@ function App() {
           </>
         )}
 
+        {/* ============ EMPLOYER: My Jobs ============ */}
+        {tab === 'myjobs' && (
+          <>
+            <header className="page-head">
+              <div>
+                <h2>My Posted Jobs</h2>
+                <p>History of jobs you've posted and their matched workers</p>
+              </div>
+            </header>
+            <div className="card">
+              {myJobs.length === 0 ? (
+                <div className="empty">
+                  <div className="empty-title">No jobs posted yet</div>
+                  <p>Go to "Match Workers" to post your first job</p>
+                </div>
+              ) : (
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Skill</th>
+                      <th>Workers</th>
+                      <th>Budget</th>
+                      <th>Matched</th>
+                      <th>Posted</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myJobs.map(j => (
+                      <tr key={j.id}>
+                        <td>{j.skill.replace(/_/g, ' ')}</td>
+                        <td>{j.workers}</td>
+                        <td>₹{j.budget}</td>
+                        <td><span className="badge success">{j.matched}</span></td>
+                        <td>{j.created}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ============ WORKER: Available Jobs ============ */}
+        {tab === 'jobs' && (
+          <>
+            <header className="page-head">
+              <div>
+                <h2>Available Jobs</h2>
+                <p>Jobs matching your skill: {user?.skill?.replace(/_/g, ' ') || 'not set'}</p>
+              </div>
+            </header>
+            <div className="card">
+              <div className="empty">
+                <div className="empty-title">Feature coming soon</div>
+                <p>Job listings will appear here once employers start posting them</p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ============ WORKER: Availability ============ */}
+        {tab === 'avail' && (
+          <>
+            <header className="page-head">
+              <div>
+                <h2>My Availability</h2>
+                <p>Mark the days you're available to work</p>
+              </div>
+            </header>
+            <div className="card">
+              <div className="avail-grid">
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                  <button key={day} className="avail-tile">
+                    <span className="avail-day">{day}</span>
+                    <span className="avail-status">Available</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ============ WORKER: Profile ============ */}
+        {tab === 'profile' && (
+          <>
+            <header className="page-head">
+              <div>
+                <h2>My Profile</h2>
+                <p>Your worker details visible to employers</p>
+              </div>
+            </header>
+            <div className="card">
+              <div className="profile-grid">
+                <div className="profile-item"><span>Name</span><strong>{user?.full_name}</strong></div>
+                <div className="profile-item"><span>Email</span><strong>{user?.email}</strong></div>
+                <div className="profile-item"><span>Role</span><strong>{user?.role}</strong></div>
+                <div className="profile-item"><span>Phone</span><strong>{user?.phone || '—'}</strong></div>
+                <div className="profile-item"><span>Location</span><strong>{user?.location || '—'}</strong></div>
+                <div className="profile-item"><span>Primary Skill</span><strong>{user?.skill?.replace(/_/g, ' ') || '—'}</strong></div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ============ ADMIN: Overview ============ */}
+        {tab === 'overview' && (
+          <>
+            <header className="page-head">
+              <div>
+                <h2>System Overview</h2>
+                <p>Platform statistics and system health</p>
+              </div>
+            </header>
+            <div className="setup-grid">
+              <div className="card">
+                <div className="card-head"><h3>Total Users</h3></div>
+                <div className="metric">
+                  <span className="metric-value">{adminStats?.total_users || 0}</span>
+                  <span className="metric-label">Registered accounts</span>
+                </div>
+              </div>
+              <div className="card">
+                <div className="card-head"><h3>Employers</h3></div>
+                <div className="metric">
+                  <span className="metric-value">{adminStats?.employers || 0}</span>
+                  <span className="metric-label">Posting jobs</span>
+                </div>
+              </div>
+              <div className="card">
+                <div className="card-head"><h3>Workers</h3></div>
+                <div className="metric">
+                  <span className="metric-value">{adminStats?.workers || 0}</span>
+                  <span className="metric-label">Available for work</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ============ ADMIN: Users ============ */}
+        {tab === 'users' && (
+          <>
+            <header className="page-head">
+              <div>
+                <h2>User Management</h2>
+                <p>All registered users on the platform</p>
+              </div>
+            </header>
+            <div className="card">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Location</th>
+                    <th>Skill</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adminUsers.map(u => (
+                    <tr key={u.id}>
+                      <td>{u.id}</td>
+                      <td><strong>{u.full_name}</strong></td>
+                      <td>{u.email}</td>
+                      <td><span className={`role-badge role-${u.role}`}>{u.role}</span></td>
+                      <td>{u.location || '—'}</td>
+                      <td>{u.skill?.replace(/_/g, ' ') || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* ============ SHARED: Simulation ============ */}
         {tab === 'simulate' && (
           <>
             <header className="page-head">
@@ -291,7 +518,6 @@ function App() {
                 <div className="empty-title">Ready to simulate</div>
                 <p className="center-text">
                   Click <strong>Run Simulation</strong> to process 50 jobs through each scheduling strategy.
-                  The AI matcher (XGBoost + OR-Tools) is identical across all setups — only the scheduling differs.
                 </p>
               </div>
             )}
@@ -305,90 +531,46 @@ function App() {
             )}
 
             {simResults && (
-              <>
-                <div className="setup-grid">
-                  {['centralized', 'static', 'adaptive'].map((name) => {
-                    const r = simResults[name]
-                    return (
-                      <div
-                        key={name}
-                        className="card setup-card"
-                        style={{ borderTop: `3px solid ${SETUP_COLORS[name]}` }}
-                      >
-                        <div className="card-head">
-                          <h3 style={{ textTransform: 'capitalize' }}>{name}</h3>
-                          <span
-                            className="badge"
-                            style={{ background: `${SETUP_COLORS[name]}15`, color: SETUP_COLORS[name] }}
-                          >
-                            {r.workers.length} {r.workers.length === 1 ? 'node' : 'nodes'}
-                          </span>
+              <div className="setup-grid">
+                {['centralized', 'static', 'adaptive'].map(name => {
+                  const r = simResults[name]
+                  return (
+                    <div key={name} className="card setup-card" style={{ borderTop: `3px solid ${SETUP_COLORS[name]}` }}>
+                      <div className="card-head">
+                        <h3 style={{ textTransform: 'capitalize' }}>{name}</h3>
+                        <span className="badge" style={{ background: `${SETUP_COLORS[name]}15`, color: SETUP_COLORS[name] }}>
+                          {r.workers.length} {r.workers.length === 1 ? 'node' : 'nodes'}
+                        </span>
+                      </div>
+                      <div className="metric-row">
+                        <div className="metric">
+                          <span className="metric-label">Avg Latency</span>
+                          <span className="metric-value">{r.avg_latency} <small>ms</small></span>
                         </div>
-
-                        <div className="metric-row">
-                          <div className="metric">
-                            <span className="metric-label">Avg Latency</span>
-                            <span className="metric-value">{r.avg_latency} <small>ms</small></span>
-                          </div>
-                          <div className="metric">
-                            <span className="metric-label">Max Latency</span>
-                            <span className="metric-value">{r.max_latency} <small>ms</small></span>
-                          </div>
-                        </div>
-
-                        <div className="metric-row">
-                          <div className="metric">
-                            <span className="metric-label">Throughput</span>
-                            <span className="metric-value">{r.throughput} <small>jobs/s</small></span>
-                          </div>
-                          <div className="metric">
-                            <span className="metric-label">Imbalance</span>
-                            <span className="metric-value">{r.load_imbalance}<small>%</small></span>
-                          </div>
-                        </div>
-
-                        <div className="worker-mini-grid">
-                          {r.workers.map((w) => (
-                            <div key={w.name} className="worker-mini">
-                              <span className="wm-name">{w.name}</span>
-                              <span className="wm-jobs">{w.jobs_processed} jobs</span>
-                            </div>
-                          ))}
+                        <div className="metric">
+                          <span className="metric-label">Max Latency</span>
+                          <span className="metric-value">{r.max_latency} <small>ms</small></span>
                         </div>
                       </div>
-                    )
-                  })}
-                </div>
-
-                <div className="card">
-                  <div className="card-head"><h3>Observations</h3></div>
-                  <ul className="insight-list">
-                    <li>
-                      <strong>Latency profile.</strong> Centralized processing achieves the lowest per-job latency
-                      because it avoids inter-node coordination. Distributed setups trade ~2–3 ms of coordination
-                      overhead for horizontal scalability.
-                    </li>
-                    <li>
-                      <strong>Load balance.</strong> The adaptive scheduler achieves{' '}
-                      <span style={{ color: SETUP_COLORS.adaptive, fontWeight: 600 }}>
-                        {simResults.adaptive.load_imbalance}% imbalance
-                      </span>, compared to static partitioning at{' '}
-                      <span style={{ color: SETUP_COLORS.static, fontWeight: 600 }}>
-                        {simResults.static.load_imbalance}%
-                      </span>.
-                    </li>
-                    <li>
-                      <strong>Tail latency.</strong> Adaptive scheduling caps maximum latency at{' '}
-                      {simResults.adaptive.max_latency} ms, versus {simResults.static.max_latency} ms for static
-                      distribution — a measurable improvement under peak load.
-                    </li>
-                  </ul>
-                </div>
-              </>
+                      <div className="metric-row">
+                        <div className="metric">
+                          <span className="metric-label">Throughput</span>
+                          <span className="metric-value">{r.throughput} <small>jobs/s</small></span>
+                        </div>
+                        <div className="metric">
+                          <span className="metric-label">Imbalance</span>
+                          <span className="metric-value">{r.load_imbalance}<small>%</small></span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             )}
           </>
         )}
 
+        {/* ============ SHARED: Compare ============ */}
         {tab === 'compare' && history && (
           <>
             <header className="page-head">
@@ -399,24 +581,16 @@ function App() {
             </header>
 
             <div className="setup-grid">
-              {['centralized', 'static', 'adaptive'].map((name) => {
+              {['centralized', 'static', 'adaptive'].map(name => {
                 const r = history[name]
                 return (
-                  <div
-                    key={name}
-                    className="card setup-card"
-                    style={{ borderTop: `3px solid ${SETUP_COLORS[name]}` }}
-                  >
+                  <div key={name} className="card setup-card" style={{ borderTop: `3px solid ${SETUP_COLORS[name]}` }}>
                     <div className="card-head">
                       <h3 style={{ textTransform: 'capitalize' }}>{name}</h3>
-                      <span
-                        className="badge"
-                        style={{ background: `${SETUP_COLORS[name]}15`, color: SETUP_COLORS[name] }}
-                      >
+                      <span className="badge" style={{ background: `${SETUP_COLORS[name]}15`, color: SETUP_COLORS[name] }}>
                         {r.nodes} {r.nodes === 1 ? 'node' : 'nodes'}
                       </span>
                     </div>
-
                     <div className="metric-row">
                       <div className="metric">
                         <span className="metric-label">Avg Latency</span>
@@ -427,7 +601,6 @@ function App() {
                         <span className="metric-value">{r.max_latency} <small>ms</small></span>
                       </div>
                     </div>
-
                     <div className="metric-row">
                       <div className="metric">
                         <span className="metric-label">Avg CPU</span>
@@ -446,17 +619,14 @@ function App() {
             <div className="card">
               <div className="card-head"><h3>Load Imbalance Comparison</h3></div>
               <div className="chart-bars">
-                {['static', 'adaptive'].map((name) => {
+                {['static', 'adaptive'].map(name => {
                   const r = history[name]
                   const pct = (r.load_imbalance / 5) * 100
                   return (
                     <div key={name} className="chart-row">
                       <span className="chart-label">{name}</span>
                       <div className="chart-track">
-                        <div
-                          className="chart-fill"
-                          style={{ width: `${Math.min(pct, 100)}%`, background: SETUP_COLORS[name] }}
-                        />
+                        <div className="chart-fill" style={{ width: `${Math.min(pct, 100)}%`, background: SETUP_COLORS[name] }} />
                       </div>
                       <span className="chart-value">{r.load_imbalance}%</span>
                     </div>
@@ -464,28 +634,10 @@ function App() {
                 })}
               </div>
             </div>
-
-            <div className="card">
-              <div className="card-head"><h3>Findings</h3></div>
-              <ul className="insight-list">
-                <li>
-                  <strong>Efficiency.</strong> Adaptive scheduling reduces aggregate CPU usage by approximately
-                  18% compared to static distribution (411% vs 501%).
-                </li>
-                <li>
-                  <strong>Load balance.</strong> Adaptive achieves 2.1% imbalance at peak load, versus 3.2%
-                  for static partitioning.
-                </li>
-                <li>
-                  <strong>Trade-off.</strong> Static distribution shows a marginally lower average latency
-                  (23.7 ms vs 24.7 ms), but adaptive exhibits better tail behavior and consistent scaling
-                  under increasing request rates.
-                </li>
-              </ul>
-            </div>
           </>
         )}
 
+        {/* ============ SHARED: Architecture ============ */}
         {tab === 'arch' && (
           <>
             <header className="page-head">
@@ -505,9 +657,7 @@ function App() {
 
             <div className="card">
               <div className="card-head"><h3>Frozen Components</h3></div>
-              <p className="card-subtitle">
-                These components are identical across all three experimental setups.
-              </p>
+              <p className="card-subtitle">These components are identical across all three experimental setups.</p>
               <div className="frozen-grid">
                 <div className="frozen-item">
                   <div className="frozen-tag">ML</div>
@@ -533,7 +683,7 @@ function App() {
                   { name: 'Centralized', nodes: 1, sched: 'No distribution — a single worker processes all jobs', color: SETUP_COLORS.centralized },
                   { name: 'Static Distributed', nodes: 3, sched: 'Hash-based Kafka partitioning (job_id mod 3)', color: SETUP_COLORS.static },
                   { name: 'Adaptive Distributed', nodes: 3, sched: 'Weighted scoring: 0.5×CPU + 0.3×queue + 0.2×latency', color: SETUP_COLORS.adaptive },
-                ].map((s) => (
+                ].map(s => (
                   <div key={s.name} className="arch-item" style={{ borderLeft: `3px solid ${s.color}` }}>
                     <div className="arch-head">
                       <strong>{s.name}</strong>
@@ -549,6 +699,7 @@ function App() {
           </>
         )}
 
+        {/* ============ SHARED: How It Works ============ */}
         {tab === 'how' && (
           <>
             <header className="page-head">
@@ -568,7 +719,7 @@ function App() {
                   { n: '04', title: 'Optimizer selects the best group', desc: 'OR-Tools CP-SAT solves a constrained optimization: exactly N workers, within budget, maximizing aggregate suitability.' },
                   { n: '05', title: 'Adaptive scheduler routes the work', desc: 'The dispatcher selects the least-loaded node using a weighted score: 0.5×CPU + 0.3×queue + 0.2×latency.' },
                   { n: '06', title: 'Result returned to the employer', desc: 'Matched workers with individual suitability scores arrive typically within 15–25 milliseconds.' },
-                ].map((s) => (
+                ].map(s => (
                   <div key={s.n} className="flow-step">
                     <div className="flow-num">{s.n}</div>
                     <div className="flow-body">
@@ -578,90 +729,6 @@ function App() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="card">
-              <div className="card-head"><h3>Real-World Applications</h3></div>
-              <div className="usecase-grid">
-                {[
-                  { title: 'Village-to-City Job Placement', desc: 'A rural mason is matched to a construction site 12 km away within seconds — no brokers, no waiting.' },
-                  { title: 'Seasonal Harvest Demand', desc: 'When hundreds of farms require labour simultaneously, thousands of requests are distributed across nodes without degradation.' },
-                  { title: 'Large Contractor Requests', desc: 'A contractor needing 50 welders within a ₹5,00,000 budget receives an optimal group selected automatically.' },
-                  { title: 'Fair Wage Enforcement', desc: 'Workers are matched by their expected wage — eliminating undercutting by middlemen.' },
-                  { title: 'Transport-Aware Assignment', desc: 'Workers with transport are prioritized for distant jobs; nearby jobs are matched to those without.' },
-                  { title: 'Low-Bandwidth Operation', desc: 'Responses return in under 25 ms, functioning reliably on slow rural connections.' },
-                ].map((u) => (
-                  <div key={u.title} className="usecase-item">
-                    <strong>{u.title}</strong>
-                    <p>{u.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-head"><h3>Stakeholders</h3></div>
-              <div className="benefit-grid">
-                <div className="benefit-col">
-                  <h4>Rural Workers</h4>
-                  <ul>
-                    <li>Instant discoverability by employers</li>
-                    <li>No dependency on intermediaries</li>
-                    <li>Matched by verified skills</li>
-                    <li>Wage expectations respected</li>
-                  </ul>
-                </div>
-                <div className="benefit-col">
-                  <h4>Employers &amp; Contractors</h4>
-                  <ul>
-                    <li>Verified workers within seconds</li>
-                    <li>Budget-aware matching</li>
-                    <li>Group hiring in one request</li>
-                    <li>Scales during peak seasons</li>
-                  </ul>
-                </div>
-                <div className="benefit-col">
-                  <h4>Government &amp; NGOs</h4>
-                  <ul>
-                    <li>Transparent, auditable matching</li>
-                    <li>Deployable on employment schemes</li>
-                    <li>Reduces rural unemployment friction</li>
-                    <li>Labour analytics for policy</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-head"><h3>Performance Guarantees</h3></div>
-              <div className="metrics-showcase">
-                {[
-                  { value: '< 25 ms', label: 'Average latency' },
-                  { value: '1,500+', label: 'Jobs per test batch' },
-                  { value: '92%', label: 'Average match quality' },
-                  { value: '2.1%', label: 'Load imbalance (adaptive)' },
-                  { value: '18%', label: 'CPU saved vs static' },
-                  { value: '3', label: 'Distributed nodes' },
-                ].map((m) => (
-                  <div key={m.label} className="metric-show">
-                    <span className="metric-show-value">{m.value}</span>
-                    <span className="metric-show-label">{m.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-head"><h3>Why Adaptive Scheduling Matters</h3></div>
-              <p className="how-paragraph">
-                Traditional systems route jobs using a fixed rule such as <code>job_id mod nodes</code>.
-                When job complexity varies — hiring 5 welders versus 1 cleaner — some workers become
-                overloaded while others remain idle. KaamSetu AI's adaptive scheduler continuously
-                monitors each worker's CPU utilization, queue length, and recent processing latency,
-                routing each new job to the node most likely to complete it fastest. This maintains
-                responsiveness under peak load, reduces wasted compute by approximately 18%, and
-                delivers consistently better worst-case latency for large job requests.
-              </p>
             </div>
           </>
         )}

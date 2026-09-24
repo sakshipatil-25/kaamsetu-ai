@@ -1071,3 +1071,129 @@ body {
   .chart-row { grid-template-columns: 80px 1fr 60px; gap: 10px; }
   .footer { flex-direction: column; align-items: flex-start; gap: 4px; }
 }
+
+
+/* ---------- Data tables ---------- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid #e8e5dc;
+}
+
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0ece0;
+  color: #2a2a2a;
+}
+
+.data-table tr:hover {
+  background: #fdfcfa;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.role-badge.role-employer {
+  background: #e8f0e9;
+  color: #2d5a3d;
+}
+
+.role-badge.role-worker {
+  background: #fdf6e3;
+  color: #b8860b;
+}
+
+.role-badge.role-admin {
+  background: #f7ebeb;
+  color: #a63d3d;
+}
+
+/* ---------- Worker Availability ---------- */
+.avail-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.avail-tile {
+  padding: 16px 12px;
+  background: #fdfcfa;
+  border: 1px solid #e8e5dc;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.avail-tile:hover {
+  border-color: #2d5a3d;
+  background: #fff;
+}
+
+.avail-day {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.avail-status {
+  font-size: 10.5px;
+  color: #3d7a4d;
+  font-weight: 500;
+}
+
+/* ---------- Profile ---------- */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.profile-item {
+  padding: 14px 16px;
+  background: #fdfcfa;
+  border: 1px solid #e8e5dc;
+  border-radius: 9px;
+}
+
+.profile-item span {
+  display: block;
+  font-size: 11px;
+  color: #6b6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.profile-item strong {
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .avail-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-grid { grid-template-columns: 1fr; }
+}

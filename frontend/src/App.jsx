@@ -4,14 +4,19 @@ import './App.css'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const SKILLS = [
-  { value: 'plumbing',   label: 'Plumbing' },
-  { value: 'electrical', label: 'Electrical' },
-  { value: 'carpentry',  label: 'Carpentry' },
-  { value: 'painting',   label: 'Painting' },
-  { value: 'masonry',    label: 'Masonry' },
-  { value: 'welding',    label: 'Welding' },
-  { value: 'gardening',  label: 'Gardening' },
-  { value: 'cleaning',   label: 'Cleaning' },
+  { value: 'farming_seeds',      label: 'Hand-planting Seeds' },
+  { value: 'farming_pruning',    label: 'Pruning Plants' },
+  { value: 'farming_weeding',    label: 'Weeding' },
+  { value: 'farming_thinning',   label: 'Thinning' },
+  { value: 'farming_harvesting', label: 'Hand-harvesting Delicate Crops' },
+  { value: 'soil_preparation',   label: 'Soil Preparation' },
+  { value: 'plumbing',           label: 'Plumbing' },
+  { value: 'electrical',         label: 'Electrical' },
+  { value: 'carpentry',          label: 'Carpentry' },
+  { value: 'painting',           label: 'Painting' },
+  { value: 'masonry',            label: 'Masonry' },
+  { value: 'welding',            label: 'Welding' },
+  { value: 'cleaning',           label: 'Cleaning' },
 ]
 
 const SETUP_COLORS = {

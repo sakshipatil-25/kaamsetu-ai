@@ -8,8 +8,21 @@ fake = Faker('en_IN')
 random.seed(42)
 np.random.seed(42)
 
-SKILLS = ['plumbing', 'electrical', 'carpentry', 'painting',
-          'masonry', 'welding', 'gardening', 'cleaning']
+SKILLS = [
+    'farming_seeds',      # Hand-planting seeds
+    'farming_pruning',    # Pruning plants
+    'farming_weeding',    # Weeding
+    'farming_thinning',   # Thinning
+    'farming_harvesting', # Hand-harvesting delicate crops
+    'soil_preparation',   # Soil preparation
+    'plumbing',
+    'electrical',
+    'carpentry',
+    'painting',
+    'masonry',
+    'welding',
+    'cleaning',
+]
 
 def generate_workers(n=1000):
     workers = []

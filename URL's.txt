@@ -1,0 +1,10 @@
+https://kaamsetu-api-y0yc.onrender.com
+
+Save These URLs Permanently
+Write these down — you'll use them everywhere:
+
+What	URL
+Backend API	https://kaamsetu-api-y0yc.onrender.com
+API Docs (Swagger)	https://kaamsetu-api-y0yc.onrender.com/docs
+Health check	https://kaamsetu-api-y0yc.onrender.com/health
+Match endpoint	https://kaamsetu-api-y0yc.onrender.com/match

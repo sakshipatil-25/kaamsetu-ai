@@ -22,18 +22,18 @@ AMBER = RGBColor(0xB8, 0x86, 0x0B)
 DIVIDER = RGBColor(0xE8, 0xE5, 0xDC)
 
 # ============================================================
-# Fonts — modern, guaranteed available on Windows
+# Fonts
 # ============================================================
-HEADING_FONT = 'Segoe UI Semibold'   # Strong modern heading
-BODY_FONT    = 'Segoe UI'            # Clean body text
-MONO_FONT    = 'Consolas'            # Numbers / code
+HEADING_FONT = 'Segoe UI Semibold'
+BODY_FONT = 'Segoe UI'
+MONO_FONT = 'Consolas'
 
 STUDENT_NAME = 'Sakshi'
 DEGREE = 'M.Tech'
 YEAR = '2025–26'
 
 # ============================================================
-# Presentation setup — 16:9 widescreen
+# Presentation setup
 # ============================================================
 prs = Presentation()
 prs.slide_width = Inches(13.333)
@@ -42,17 +42,14 @@ blank = prs.slide_layouts[6]
 
 slide_count = [0]
 
-
 def add_slide():
     slide_count[0] += 1
     return prs.slides.add_slide(blank)
-
 
 def set_bg(slide, color):
     fill = slide.background.fill
     fill.solid()
     fill.fore_color.rgb = color
-
 
 def add_text(slide, left, top, width, height, text, size=18, bold=False,
              color=TEXT, align=PP_ALIGN.LEFT, font=BODY_FONT, italic=False,
@@ -71,7 +68,6 @@ def add_text(slide, left, top, width, height, text, size=18, bold=False,
     run.font.color.rgb = color
     run.font.name = font
     return tb
-
 
 def add_bullets(slide, left, top, width, height, items, size=14,
                 color=TEXT, spacing=8, font=BODY_FONT):
@@ -98,7 +94,6 @@ def add_bullets(slide, left, top, width, height, items, size=14,
         run.font.name = font
     return tb
 
-
 def add_rect(slide, left, top, width, height, color):
     shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(left), Inches(top),
                                     Inches(width), Inches(height))
@@ -108,7 +103,6 @@ def add_rect(slide, left, top, width, height, color):
     shape.shadow.inherit = False
     return shape
 
-
 def add_footer(slide, page_num=None):
     add_rect(slide, 0, 7.15, 13.333, 0.02, DIVIDER)
     add_text(slide, 0.7, 7.22, 6, 0.25,
@@ -117,7 +111,6 @@ def add_footer(slide, page_num=None):
     if page_num:
         add_text(slide, 11.5, 7.22, 1.1, 0.25, f'{page_num:02d}',
                  size=9, color=LIGHT, align=PP_ALIGN.RIGHT, font=MONO_FONT)
-
 
 def content_slide(title, subtitle=None):
     s = add_slide()
@@ -131,7 +124,6 @@ def content_slide(title, subtitle=None):
                  color=MUTED, italic=True)
     add_footer(s, slide_count[0])
     return s
-
 
 # ============================================================
 # SLIDE 1 — Title
@@ -148,8 +140,8 @@ add_text(s, 1.1, 2.05, 11.5, 1.3, 'KaamSetu AI',
          size=54, bold=True, color=CHARCOAL, font=HEADING_FONT)
 
 add_text(s, 1.1, 3.35, 11.5, 0.8,
-         'Adaptive Distributed AI-Based Rural Workforce Matching System',
-         size=19, color=MUTED, italic=True)
+         'An Intelligent Distributed Platform for Real-Time Rural Workforce\nMatching, Wage Estimation, and Resource Coordination',
+         size=17, color=MUTED, italic=True)
 
 add_rect(s, 1.1, 4.35, 2.8, 0.04, GREEN)
 
@@ -170,13 +162,13 @@ add_text(s, 1.1, 6.5, 11, 0.4,
 s = content_slide('Agenda', 'Overview of the presentation')
 items = [
     ('01    Problem Statement', True),
-    ('02    Research Question & Motivation', True),
+    ('02    Research Objective & Motivation', True),
     ('03    System Architecture', True),
     ('04    AI Matching Pipeline', True),
-    ('05    Three Scheduling Strategies', True),
-    ('06    Experimental Setup', True),
-    ('07    Results — Measured Performance', True),
-    ('08    Research Contribution', True),
+    ('05    Distributed Scheduling Strategies', True),
+    ('06    Multi-Constraint Optimization', True),
+    ('07    Research Features (Wage, Travel, Forecast)', True),
+    ('08    Experimental Results', True),
     ('09    Live Web Application', True),
     ('10    Conclusion & Future Work', True),
 ]
@@ -219,26 +211,28 @@ add_text(s, 0.7, 6.6, 12, 0.5,
          size=12, bold=True, color=GREEN)
 
 # ============================================================
-# SLIDE 4 — Research Question
+# SLIDE 4 — Research Objective
 # ============================================================
-s = content_slide('Research Question',
+s = content_slide('Research Objective',
                   'The central hypothesis behind this work')
 
 add_rect(s, 0.7, 1.9, 12, 2.0, WHITE)
 add_rect(s, 0.7, 1.9, 0.06, 2.0, GREEN)
 add_text(s, 1.1, 2.15, 11.3, 1.6,
-         '"Can adaptive distributed workload management improve the '
-         'performance of real-time AI-based rural workforce matching '
-         'compared with centralized and static distributed processing?"',
-         size=19, italic=True, color=CHARCOAL, font=HEADING_FONT)
+         '"Can an AI-based multi-constraint matching and optimization model '
+         'improve rural worker-employer matching by reducing total hiring cost, '
+         'travel distance, and matching time while satisfying skill, availability, '
+         'and workforce requirements?"',
+         size=17, italic=True, color=CHARCOAL, font=HEADING_FONT)
 
 add_text(s, 0.7, 4.25, 12, 0.4, 'Motivation',
          size=15, bold=True, color=GREEN, font=HEADING_FONT)
 add_bullets(s, 0.7, 4.75, 12, 2.0, [
-    'The research focus is adaptive distributed workload management — not just an application.',
-    'Performance is measured along latency, throughput, scalability, and load balance.',
-    'Three scheduling strategies are compared with an identical AI matcher.',
-], size=13, spacing=9)
+    'Focus on adaptive distributed workload management — not just an application.',
+    'Performance measured along latency, throughput, scalability, and load balance.',
+    'Three scheduling strategies compared with an identical AI matcher.',
+    'Baselines provide a fair comparison for multi-constraint optimization.',
+], size=12.5, spacing=8)
 
 # ============================================================
 # SLIDE 5 — System Architecture
@@ -271,7 +265,7 @@ add_rect(s, 4.0, 3.65, 3.0, 1.1, WHITE)
 add_rect(s, 4.0, 3.65, 3.0, 0.05, BROWN)
 add_text(s, 4.1, 3.85, 2.8, 0.35, 'Storage Layer',
          size=12, bold=True, color=CHARCOAL, font=HEADING_FONT, align=PP_ALIGN.CENTER)
-add_text(s, 4.1, 4.23, 2.8, 0.4, 'PostgreSQL  ·  Redis',
+add_text(s, 4.1, 4.23, 2.8, 0.4, 'PostgreSQL  ·  Redis  ·  SQLite',
          size=10, color=MUTED, align=PP_ALIGN.CENTER)
 
 add_text(s, 3.75, 2.5, 0.3, 0.4, '→', size=20, color=GREEN, align=PP_ALIGN.CENTER)
@@ -313,9 +307,9 @@ for num, title, color, desc in steps:
     top += 1.5
 
 # ============================================================
-# SLIDE 7 — Three Scheduling Strategies
+# SLIDE 7 — Distributed Scheduling Strategies
 # ============================================================
-s = content_slide('Three Scheduling Strategies',
+s = content_slide('Distributed Scheduling Strategies',
                   'Identical AI matcher — only the distribution strategy differs')
 
 strategies = [
@@ -345,38 +339,75 @@ add_text(s, 0.7, 6.55, 12, 0.5,
          size=12, bold=True, color=GREEN, align=PP_ALIGN.CENTER)
 
 # ============================================================
-# SLIDE 8 — Experimental Setup
+# SLIDE 8 — Multi-Constraint Optimization
 # ============================================================
-s = content_slide('Experimental Setup',
-                  'A controlled benchmark to isolate scheduling effects')
+s = content_slide('Multi-Constraint Optimization',
+                  'Mathematical formulation and baselines')
 
-add_text(s, 0.7, 1.85, 5.8, 0.4, 'Inputs & Configuration',
+add_rect(s, 0.7, 1.85, 12, 1.1, WHITE)
+add_rect(s, 0.7, 1.85, 0.06, 1.1, GREEN)
+add_text(s, 1.05, 2.0, 11.5, 0.85,
+         'Minimize:  Cost = α·W  +  β·D  +  γ·T  +  δ·M\n'
+         'where W = wage, D = distance, T = transport cost, M = mismatch penalty',
+         size=13, color=CHARCOAL, font=MONO_FONT)
+
+add_text(s, 0.7, 3.15, 12, 0.4, 'Constraints',
          size=14, bold=True, color=GREEN, font=HEADING_FONT)
-add_bullets(s, 0.7, 2.35, 5.8, 4.0, [
-    '1,000 synthetic workers with realistic rural attributes',
-    '500 job records with skill, budget, and duration',
-    'Request rates: 100 / 500 / 1000 / 5000 per second',
-    'Node counts: 1, 3, and 5 processing nodes',
-    'Frozen XGBoost model — same model in every run',
-    'Five repetitions per configuration for significance',
-], size=12, spacing=7)
+add_bullets(s, 0.7, 3.6, 6, 2.0, [
+    'WorkersSelected = WorkersRequired',
+    'SkillMatch ≥ RequiredSkill',
+    'Availability = 1',
+], size=11.5, spacing=6)
 
-add_text(s, 6.85, 1.85, 5.8, 0.4, 'Metrics Measured',
+add_text(s, 7.0, 3.15, 6, 0.4, 'Baselines Compared',
          size=14, bold=True, color=BROWN, font=HEADING_FONT)
-add_bullets(s, 6.85, 2.35, 5.8, 4.0, [
-    'End-to-end latency (average and maximum)',
-    'Throughput (jobs per second)',
-    'CPU and memory utilization per node',
-    'Load imbalance across nodes',
-    'Matching success rate and skill-match score',
-    'Constraint violations and unmatched jobs',
-], size=12, spacing=7)
+add_bullets(s, 7.0, 3.6, 6, 2.0, [
+    'Nearest-Worker (distance only)',
+    'Skill-Based (skill + rating)',
+    'Proposed (multi-constraint)',
+], size=11.5, spacing=6)
+
+add_rect(s, 0.7, 5.85, 12, 0.7, GREEN_LIGHT)
+add_text(s, 0.9, 5.95, 11.6, 0.5,
+         'Result: Proposed optimizer reduces total wage by ~24% vs Nearest-Worker baseline\n'
+         'and ~4% vs Skill-Based baseline, while maintaining acceptable average distance.',
+         size=11.5, bold=True, color=GREEN_DARK, align=PP_ALIGN.CENTER)
 
 # ============================================================
-# SLIDE 9 — Results
+# SLIDE 9 — Research Features
 # ============================================================
-s = content_slide('Results — Measured Performance',
-                  'Aggregated from real distributed Kafka experiments')
+s = content_slide('Research Features',
+                  'Additional capabilities implemented in the platform')
+
+features = [
+    ('Wage Estimation', 'Predicts market-fair wages from skill, season, and duration.'),
+    ('Travel Planning', 'Groups workers into shared vehicles with distance and cost estimates.'),
+    ('Fair Wage Warning', 'Alerts employers when offer falls below market reference.'),
+    ('Digital Work Order', 'Itemized invoice with labour, transport, and platform fee.'),
+    ('Demand Forecasting', 'Seasonal prediction of labour demand by skill category.'),
+    ('Worker Availability', 'Persistent day-by-day availability tracking.'),
+    ('Three-Role Auth', 'JWT-based access for employer, worker, and admin.'),
+    ('Landing Page', 'Public marketing page with feature highlights and demo access.'),
+]
+
+top = 1.85
+for i, (name, desc) in enumerate(features):
+    col = i % 2
+    row = i // 2
+    left = 0.7 + col * 6.2
+    top_i = top + row * 1.15
+    add_rect(s, left, top_i, 5.9, 1.0, WHITE)
+    add_rect(s, left, top_i, 0.05, 1.0, GREEN)
+    add_text(s, left + 0.25, top_i + 0.15, 5.5, 0.4, name,
+             size=12.5, bold=True, color=GREEN_DARK, font=HEADING_FONT)
+    add_text(s, left + 0.25, top_i + 0.5, 5.5, 0.5, desc,
+             size=11, color=MUTED)
+
+# ============================================================
+# SLIDE 10 — Experimental Results
+# ============================================================
+s = content_slide('Experimental Results',
+                  'Scheduling strategy comparison')
 
 add_rect(s, 0.7, 1.85, 12, 0.5, GREEN_LIGHT)
 add_text(s, 0.9, 1.95, 3.5, 0.35, 'METRIC',
@@ -417,62 +448,37 @@ add_text(s, 0.7, 6.2, 12, 0.6,
          size=11, italic=True, color=MUTED)
 
 # ============================================================
-# SLIDE 10 — Research Contribution
-# ============================================================
-s = content_slide('Research Contribution',
-                  'What is novel in this work')
-
-contributions = [
-    ('01', 'Novel Adaptive Scheduling',
-     'A weighted metric-driven dispatcher (CPU + queue + latency) applied to AI-based workforce matching.'),
-    ('02', 'Measurable Performance Gains',
-     '~18% lower CPU usage and 2.1% load imbalance versus 3.2% for static distribution.'),
-    ('03', 'Clean Three-Way Benchmark',
-     'A frozen AI matcher isolates scheduling as the single experimental variable.'),
-    ('04', 'Open-Source Prototype',
-     'Full source code, FastAPI backend, React dashboard, and Docker deployment available on GitHub.'),
-]
-
-top = 1.85
-for num, title, desc in contributions:
-    add_rect(s, 0.7, top, 12, 1.05, WHITE)
-    add_rect(s, 0.7, top, 0.05, 1.05, GREEN)
-    add_text(s, 1.0, top + 0.15, 0.7, 0.4, num,
-             size=18, bold=True, color=GREEN, font=HEADING_FONT)
-    add_text(s, 1.85, top + 0.1, 10.5, 0.35, title,
-             size=13, bold=True, color=CHARCOAL, font=HEADING_FONT)
-    add_text(s, 1.85, top + 0.5, 10.5, 0.5, desc,
-             size=11, color=MUTED)
-    top += 1.2
-
-# ============================================================
 # SLIDE 11 — Live Web Application
 # ============================================================
 s = content_slide('Live Web Application',
                   'An interactive demonstration of the research')
 
-tabs = [
-    ('Match Workers', 'Submit a job request and receive AI-matched workers in ~25 ms.'),
-    ('Live Simulation', 'Run Centralized, Static, and Adaptive side-by-side in real time.'),
-    ('Research Results', 'View aggregated metrics from the real distributed experiments.'),
-    ('Architecture', 'Explore the design of the three scheduling strategies.'),
-    ('How It Works', 'End-to-end walkthrough with real-world rural use cases.'),
+add_text(s, 0.7, 1.85, 12, 0.4, 'Architecture',
+         size=14, bold=True, color=GREEN, font=HEADING_FONT)
+add_bullets(s, 0.7, 2.3, 12, 1.2, [
+    'FastAPI backend deployed on Render  —  https://kaamsetu-api-y0yc.onrender.com',
+    'React frontend deployed on Render  —  https://kaamsetu-frontend.onrender.com',
+    'Live API documentation  —  /docs (Swagger UI)',
+], size=12, spacing=6)
+
+add_text(s, 0.7, 3.6, 12, 0.4, 'Demo Accounts (password: demo123)',
+         size=14, bold=True, color=GREEN, font=HEADING_FONT)
+
+accounts = [
+    ('employer@demo.com', 'Post jobs, view AI matches, generate work orders, view forecasts'),
+    ('worker@demo.com',   'Browse jobs, accept work, manage availability'),
+    ('admin@demo.com',    'View statistics, manage users, run simulations'),
 ]
 
-top = 1.85
-for name, desc in tabs:
-    add_rect(s, 0.7, top, 12, 0.72, WHITE)
-    add_rect(s, 0.7, top, 0.05, 0.72, GREEN)
-    add_text(s, 1.05, top + 0.12, 3.2, 0.4, name,
-             size=12.5, bold=True, color=GREEN, font=HEADING_FONT)
-    add_text(s, 4.4, top + 0.15, 8.1, 0.5, desc,
-             size=11.5, color=MUTED)
-    top += 0.82
-
-add_rect(s, 0.7, 6.15, 12, 0.6, GREEN_LIGHT)
-add_text(s, 0.9, 6.28, 11.6, 0.4,
-         'Live App:    kaamsetu-frontend.onrender.com        |        API Docs:    kaamsetu-api.onrender.com/docs',
-         size=11.5, bold=True, color=GREEN_DARK, font=MONO_FONT, align=PP_ALIGN.CENTER)
+top = 4.05
+for email, desc in accounts:
+    add_rect(s, 0.7, top, 12, 0.65, WHITE)
+    add_rect(s, 0.7, top, 0.05, 0.65, GREEN)
+    add_text(s, 1.05, top + 0.1, 3.5, 0.4, email,
+             size=12, bold=True, color=GREEN_DARK, font=MONO_FONT)
+    add_text(s, 4.7, top + 0.15, 7.8, 0.4, desc,
+             size=11, color=MUTED)
+    top += 0.75
 
 # ============================================================
 # SLIDE 12 — Conclusion & Future Work
@@ -484,17 +490,19 @@ add_text(s, 0.7, 1.85, 12, 0.4, 'Conclusion',
          size=15, bold=True, color=GREEN, font=HEADING_FONT)
 add_bullets(s, 0.7, 2.35, 12, 2.0, [
     'Adaptive distributed scheduling measurably improves efficiency and load balance over static distribution.',
+    'The multi-constraint AI optimizer saves ~24% on wage vs the nearest-worker baseline.',
     'The AI matching pipeline (XGBoost + OR-Tools) delivers sub-25 ms responses at scale.',
     'Real-world rural workforce matching becomes practical with this architecture.',
-], size=12.5, spacing=8)
+], size=12, spacing=6)
 
-add_text(s, 0.7, 4.55, 12, 0.4, 'Future Work',
+add_text(s, 0.7, 4.95, 12, 0.4, 'Future Work',
          size=15, bold=True, color=BROWN, font=HEADING_FONT)
-add_bullets(s, 0.7, 5.05, 12, 1.8, [
+add_bullets(s, 0.7, 5.45, 12, 1.8, [
     'Deploy on AWS for real cloud-scale benchmarking across regions.',
     'Integrate Apache Spark for larger streaming workloads.',
     'Extend to multi-region scheduling and A/B model deployment.',
-], size=12.5, spacing=8)
+    'Incorporate real anonymized survey data (with consent).',
+], size=12, spacing=6)
 
 # ============================================================
 # SLIDE 13 — Key Takeaways
@@ -504,8 +512,8 @@ s = content_slide('Key Takeaways',
 
 takeaways = [
     ('Adaptive beats static', 'On CPU efficiency (18% lower) and load balance (2.1% vs 3.2%).'),
-    ('Frozen AI, variable scheduling', 'A clean experiment isolates the contribution of scheduling.'),
-    ('Practical and deployable', 'A working web app demonstrates real-time matching in the browser.'),
+    ('Multi-constraint wins', 'Proposed optimizer saves ~24% on wage vs nearest-worker baseline.'),
+    ('Practical and deployable', 'A live web app demonstrates real-time matching and full workflow.'),
 ]
 
 top = 2.0
@@ -545,12 +553,9 @@ add_text(s, 1.1, 6.4, 11, 0.4,
 # ============================================================
 prs.save('KaamSetu_AI_Presentation.pptx')
 print('=' * 60)
-print('Presentation created successfully')
+print('Presentation updated successfully')
 print('=' * 60)
-print(f'File:      KaamSetu_AI_Presentation.pptx')
-print(f'Slides:    {len(prs.slides)}')
-print(f'Author:    {STUDENT_NAME}')
-print(f'Headings:  {HEADING_FONT}')
-print(f'Body:      {BODY_FONT}')
-print(f'Monospace: {MONO_FONT}')
+print(f'File:   KaamSetu_AI_Presentation.pptx')
+print(f'Slides: {len(prs.slides)}')
+print(f'Author: {STUDENT_NAME}')
 print('=' * 60)

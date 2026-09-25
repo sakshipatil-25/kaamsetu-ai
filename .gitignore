@@ -40,3 +40,7 @@ Thumbs.db
 data/users.db
 data/users.db-journal
 data/*.db
+
+# Allow docs screenshots
+!docs/screenshots/*.png
+!docs/screenshots/*.jpg

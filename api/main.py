@@ -615,3 +615,26 @@ def demand_forecast(user: dict = Depends(get_current_user)):
             if top_skill else "No data available yet."
         ),
     }
+# ============================================================
+# Worker Availability
+# ============================================================
+class AvailabilityRequest(BaseModel):
+    days: List[str]  # e.g. ['Monday', 'Tuesday']
+
+
+@app.get("/worker/availability")
+def get_availability(user: dict = Depends(get_current_user)):
+    """Get worker's saved availability."""
+    if user['role'] != 'worker':
+        raise HTTPException(status_code=403, detail="Worker access required")
+    avail = auth_module.get_worker_availability(user['id'])
+    return {"days": avail}
+
+
+@app.post("/worker/availability")
+def set_availability(req: AvailabilityRequest, user: dict = Depends(get_current_user)):
+    """Save worker's availability."""
+    if user['role'] != 'worker':
+        raise HTTPException(status_code=403, detail="Worker access required")
+    avail = auth_module.set_worker_availability(user['id'], req.days)
+    return {"days": avail, "saved": True}

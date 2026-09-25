@@ -95,6 +95,7 @@ function App() {
   const [tab, setTab] = useState(DEFAULT_TAB[role] || 'match')
   const [workOrderJobId, setWorkOrderJobId] = useState(null)
 
+
   // Employer state
   const [form, setForm] = useState({
     required_skill: 'farming_seeds',
@@ -119,6 +120,8 @@ function App() {
   // Worker state
   const [availableJobs, setAvailableJobs] = useState([])
   const [toast, setToast] = useState(null)
+  const [availability, setAvailability] = useState([])
+  const [availSaving, setAvailSaving] = useState(false)
 
   useEffect(() => {
     fetch(`${API_URL}/experiments`)
@@ -132,6 +135,15 @@ function App() {
       loadMyJobs()
     }
   }, [role])
+
+  useEffect(() => {
+    if (role === 'worker' && tab === 'avail') {
+      apiFetch('/worker/availability')
+        .then(r => r.json())
+        .then(d => setAvailability(d.days || []))
+        .catch(() => {})
+    }
+  }, [role, tab])
 
   useEffect(() => {
     if (role === 'worker' && tab === 'jobs') {
@@ -211,6 +223,22 @@ function App() {
       setToast('Failed to accept job')
       setTimeout(() => setToast(null), 3000)
     }
+  }
+  const toggleDay = async (day) => {
+    const next = availability.includes(day)
+      ? availability.filter(d => d !== day)
+      : [...availability, day]
+    setAvailability(next)
+    setAvailSaving(true)
+    try {
+      await apiFetch('/worker/availability', {
+        method: 'POST',
+        body: JSON.stringify({ days: next }),
+      })
+    } catch (err) {
+      // silent
+    }
+    setAvailSaving(false)
   }
 
   const runSimulation = async () => {
@@ -514,22 +542,35 @@ function App() {
           </>
         )}
 
-        {tab === 'avail' && (
+                {tab === 'avail' && (
           <>
             <header className="page-head">
               <div>
                 <h2>My Availability</h2>
-                <p>Mark the days you're available to work</p>
+                <p>Click the days you're available to work — changes save automatically</p>
               </div>
+              {availSaving && <span className="badge">Saving…</span>}
             </header>
             <div className="card">
               <div className="avail-grid">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-                  <button key={day} className="avail-tile">
-                    <span className="avail-day">{day}</span>
-                    <span className="avail-status">Available</span>
-                  </button>
-                ))}
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                  const isActive = availability.includes(day)
+                  return (
+                    <button
+                      key={day}
+                      className={`avail-tile ${isActive ? 'avail-active' : ''}`}
+                      onClick={() => toggleDay(day)}
+                    >
+                      <span className="avail-day">{day}</span>
+                      <span className="avail-status">
+                        {isActive ? '✓ Available' : 'Not available'}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="avail-summary">
+                <strong>{availability.length}</strong> of 7 days marked as available
               </div>
             </div>
           </>

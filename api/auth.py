@@ -27,7 +27,7 @@ TOKEN_EXPIRE_HOURS = 24 * 7  # 7 days
 # Database setup
 # ============================================================
 def init_db():
-    """Create users and jobs tables if they don't exist."""
+    """Create users, jobs, and worker_availability tables if they don't exist."""
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
@@ -61,6 +61,15 @@ def init_db():
             matched_count INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (employer_id) REFERENCES users(id)
+        )
+    ''')
+
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS worker_availability (
+            user_id INTEGER PRIMARY KEY,
+            days TEXT DEFAULT '[]',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
 
@@ -302,6 +311,37 @@ def accept_job(job_id: int, worker_name: str):
     updated = cur.fetchone()
     conn.close()
     return dict(updated)
+
+
+# ============================================================
+# Worker Availability CRUD
+# ============================================================
+def get_worker_availability(user_id: int):
+    """Get saved availability days for a worker."""
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute('SELECT days FROM worker_availability WHERE user_id = ?', (user_id,))
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return []
+    return json.loads(row[0] or '[]')
+
+
+def set_worker_availability(user_id: int, days: list):
+    """Upsert worker's availability."""
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute('''
+        INSERT INTO worker_availability (user_id, days, updated_at)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(user_id) DO UPDATE SET
+            days = excluded.days,
+            updated_at = CURRENT_TIMESTAMP
+    ''', (user_id, json.dumps(days)))
+    conn.commit()
+    conn.close()
+    return days
 
 
 # ============================================================

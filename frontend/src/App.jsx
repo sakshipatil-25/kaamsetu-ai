@@ -4,6 +4,7 @@ import { getUser, clearAuth, apiFetch, API_URL } from './auth'
 import { WagePanel, GroupMatchPanel, TravelPanel } from './ResearchPanels'
 import FairWagePanel from './FairWagePanel'
 import WorkOrderModal from './WorkOrderModal'
+import DemandForecast from './DemandForecast'
 import './App.css'
 
 const SKILLS = [
@@ -39,6 +40,7 @@ const NAV_CONFIG = {
     ]},
     { section: 'Research', items: [
       { id: 'simulate', label: 'Live Simulation' },
+      { id: 'forecast', label: 'Demand Forecast' },
       { id: 'compare',  label: 'Research Results' },
     ]},
     { section: 'Documentation', items: [
@@ -63,6 +65,7 @@ const NAV_CONFIG = {
     ]},
     { section: 'Research', items: [
       { id: 'simulate', label: 'Live Simulation' },
+      { id: 'forecast', label: 'Demand Forecast' },
       { id: 'compare',  label: 'Research Results' },
     ]},
     { section: 'Documentation', items: [
@@ -623,6 +626,8 @@ function App() {
             </div>
           </>
         )}
+		
+	{tab === 'forecast' && <DemandForecast />}
 
         {tab === 'simulate' && (
           <>

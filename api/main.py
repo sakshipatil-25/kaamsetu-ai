@@ -535,3 +535,83 @@ def generate_work_order(req: WorkOrderRequest, user: dict = Depends(get_current_
         'generated_at': str(__import__('datetime').datetime.now()),
         'notes': wage['notes'],
     }
+
+# ============================================================
+# Demand Forecasting
+# ============================================================
+@app.get("/research/forecast")
+def demand_forecast(user: dict = Depends(get_current_user)):
+    """
+    Predict labour demand for the next 7 days based on historical job data,
+    season, and skill-specific patterns.
+    """
+    import pandas as pd
+    import datetime
+
+    jobs_df = pd.read_csv('data/jobs.csv')
+    current_month = datetime.datetime.now().month
+
+    # Aggregate jobs by skill
+    skill_counts = jobs_df['required_skill'].value_counts().to_dict()
+
+    # Seasonal multiplier by skill type
+    def season_factor(skill, month):
+        # Agriculture peaks during harvest (Sep-Nov)
+        if skill.startswith('farming_') or skill == 'soil_preparation':
+            if month in (9, 10, 11):
+                return 1.4
+            elif month in (5, 6, 7):
+                return 1.2
+            else:
+                return 1.0
+        # Construction peaks in dry season (Nov-Mar)
+        elif skill in ('masonry', 'carpentry', 'painting'):
+            if month in (11, 12, 1, 2, 3):
+                return 1.25
+            else:
+                return 1.0
+        # Plumbing/electrical steady year-round
+        else:
+            return 1.0
+
+    forecasts = []
+    for skill, base_count in skill_counts.items():
+        sf = season_factor(skill, current_month)
+        # Predicted demand = base historical × seasonal factor (with slight smoothing)
+        predicted = int(base_count * sf * 0.15)  # 15% of annual avg per week
+        confidence = 'high' if sf > 1.2 else ('medium' if sf > 1.0 else 'low')
+        trend = 'rising' if sf > 1.15 else ('falling' if sf < 0.95 else 'stable')
+        forecasts.append({
+            'skill': skill,
+            'skill_label': skill.replace('_', ' '),
+            'historical_jobs': base_count,
+            'predicted_next_week': max(1, predicted),
+            'season_factor': sf,
+            'trend': trend,
+            'confidence': confidence,
+        })
+
+    # Sort by predicted demand
+    forecasts.sort(key=lambda x: -x['predicted_next_week'])
+
+    # Overall insights
+    top_skill = forecasts[0] if forecasts else None
+    high_demand_count = len([f for f in forecasts if f['trend'] == 'rising'])
+
+    return {
+        'forecast_date': str(datetime.date.today()),
+        'current_month': current_month,
+        'skills': forecasts,
+        'summary': {
+            'top_skill': top_skill['skill_label'] if top_skill else None,
+            'top_skill_demand': top_skill['predicted_next_week'] if top_skill else 0,
+            'rising_skills': high_demand_count,
+            'total_predicted_jobs': sum(f['predicted_next_week'] for f in forecasts),
+        },
+        'insight': (
+            f"High demand expected for '{top_skill['skill_label']}' next week "
+            f"(~{top_skill['predicted_next_week']} jobs). "
+            f"{high_demand_count} skill categories are trending upward."
+            if top_skill else "No data available yet."
+        ),
+    }

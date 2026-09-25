@@ -69,7 +69,10 @@ export default function Signup() {
       </div>
 
       <div className="auth-right">
-        <div className="auth-card">
+                <div className="auth-card">
+          <Link to="/" style={{ fontSize: '12px', color: '#9a9a9a', display: 'block', marginBottom: '16px', textDecoration: 'none' }}>
+            ← Back to home
+          </Link>
           <h2>Create account</h2>
           <p className="auth-subtitle">Join KaamSetu AI in a few seconds.</p>
 

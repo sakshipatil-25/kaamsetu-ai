@@ -55,7 +55,10 @@ export default function Login() {
       </div>
 
       <div className="auth-right">
-        <div className="auth-card">
+          <div className="auth-card">
+          <Link to="/" style={{ fontSize: '12px', color: '#9a9a9a', display: 'block', marginBottom: '16px', textDecoration: 'none' }}>
+            ← Back to home
+          </Link>
           <h2>Sign in</h2>
           <p className="auth-subtitle">Welcome back. Sign in to continue.</p>
 

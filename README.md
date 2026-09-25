@@ -15,6 +15,7 @@ A full-stack M.Tech research prototype demonstrating multi-constraint AI matchin
 - [Research Objective](#research-objective)
 - [What This Platform Does](#what-this-platform-does)
 - [Live Demo](#live-demo)
+- [Screenshots](#screenshots)
 - [Key Features](#key-features)
 - [Research Design](#research-design)
 - [Experimental Results](#experimental-results)
@@ -25,7 +26,6 @@ A full-stack M.Tech research prototype demonstrating multi-constraint AI matchin
 - [Getting Started](#getting-started)
 - [Running Experiments](#running-experiments)
 - [Documentation](#documentation)
-- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -68,6 +68,85 @@ KaamSetu AI is an intelligent platform connecting rural workers with employers t
 > **Note:** Free-tier hosting sleeps after 15 minutes of inactivity. First request may take ~30–45 seconds to wake up.
 
 **API Docs:** https://kaamsetu-api-y0yc.onrender.com/docs
+
+---
+
+## Screenshots
+
+### Landing Page
+
+![Landing Page](docs/screenshots/01-landing.png)
+
+The public entry point — a clean marketing page with hero, stats, feature highlights, and three user personas.
+
+### Authentication
+
+![Login Page](docs/screenshots/02-login.png)
+
+JWT-based login with quick-access demo buttons. Password: `demo123` for all demo accounts.
+
+---
+
+### Employer Experience
+
+**AI Worker Matching**
+
+![Employer Match](docs/screenshots/03-employer-match.png)
+
+Submit a job request → the system runs XGBoost suitability scoring, OR-Tools CP-SAT group selection, and displays three research panels:
+- **Wage Estimate** — market-fair cost prediction with seasonal and complexity factors
+- **Travel Plan** — workers grouped into shared vehicles with cost estimates
+- **Strategy Comparison** — proposed AI vs two baselines (Nearest-Worker, Skill-Based)
+
+**Digital Work Order**
+
+![Work Order](docs/screenshots/04-work-order.png)
+
+Auto-generated itemized invoice with labour, transport, and platform costs. Export as PDF.
+
+**Demand Forecasting**
+
+![Demand Forecast](docs/screenshots/05-forecast.png)
+
+Seasonal labour demand prediction by skill category — helps employers plan ahead and workers anticipate opportunities.
+
+**Live Distributed Simulation**
+
+![Live Simulation](docs/screenshots/06-simulation.png)
+
+Run Centralized, Static, and Adaptive scheduling side-by-side on the same dataset. Compares latency, throughput, and load imbalance in real time.
+
+---
+
+### Worker Experience
+
+**Available Jobs**
+
+![Worker Jobs](docs/screenshots/07-worker-jobs.png)
+
+Browse jobs matching your skill. One-click acceptance with instant visual feedback.
+
+**Availability Management**
+
+![Worker Availability](docs/screenshots/08-worker-availability.png)
+
+Mark which days you're available. Persists across sessions so employers can find you.
+
+---
+
+### Admin Experience
+
+**System Overview**
+
+![Admin Overview](docs/screenshots/09-admin-overview.png)
+
+Platform statistics — total users, employers, and workers on the platform.
+
+**User Management**
+
+![Admin Users](docs/screenshots/10-admin-users.png)
+
+Full user directory with role badges, location, and skill information.
 
 ---
 
@@ -327,6 +406,9 @@ kaamsetu-ai/
 │       ├── DemandForecast.jsx    Forecast page
 │       └── auth.js               Auth helpers + JWT storage
 │
+├── docs/                         Documentation assets
+│   └── screenshots/              10 product screenshots
+│
 ├── data/                         Generated datasets
 │   ├── workers.csv               1,000 workers (13 skills, gender, age)
 │   ├── jobs.csv                  500 jobs
@@ -457,16 +539,8 @@ Produces `results/comparison_plots.png`.
 | `README.md` | This file — project overview |
 | `KaamSetu_AI_Presentation.pptx` | Research presentation (14 slides) |
 | `/docs` (Swagger) | Interactive API explorer |
+| `docs/screenshots/` | 10 product screenshots |
 | Source code comments | Inline documentation |
-
----
-
-## Contributing
-
-This is a research prototype. For questions or collaboration:
-
-- Open an issue on GitHub
-- Contact the author via the email listed in commits
 
 ---
 

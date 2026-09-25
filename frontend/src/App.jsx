@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getUser, clearAuth, apiFetch, API_URL } from './auth'
 import { WagePanel, GroupMatchPanel, TravelPanel } from './ResearchPanels'
+import FairWagePanel from './FairWagePanel'
+import WorkOrderModal from './WorkOrderModal'
 import './App.css'
 
 const SKILLS = [
@@ -88,6 +90,7 @@ function App() {
   }
 
   const [tab, setTab] = useState(DEFAULT_TAB[role] || 'match')
+  const [workOrderJobId, setWorkOrderJobId] = useState(null)
 
   // Employer state
   const [form, setForm] = useState({
@@ -153,9 +156,10 @@ function App() {
       })
       if (!res.ok) throw new Error(`Server responded with status ${res.status}`)
       const data = await res.json()
-      setResults({
+            setResults({
         matched_workers: data.matched_workers || [],
         count: (data.matched_workers || []).length,
+        job_id: data.job?.id || null,
       })
       loadMyJobs()
     } catch (err) {
@@ -324,6 +328,13 @@ function App() {
                         onChange={e => setForm({ ...form, duration_hours: +e.target.value })} />
                     </div>
                   </div>
+                                   <FairWagePanel
+                    skill={form.required_skill}
+                    numWorkers={form.num_workers_needed}
+                    budget={form.budget}
+                    durationHours={form.duration_hours}
+                  />
+
                   <button className="primary-btn" disabled={loading}>
                     {loading ? <><span className="spinner" /> Matching…</> : <>Find Best Workers →</>}
                   </button>
@@ -363,7 +374,15 @@ function App() {
                         </div>
                       </li>
                     ))}
-                  </ul>
+                                    </ul>
+                )}
+                {results && results.job_id && (
+                  <button
+                    className="primary-btn compact work-order-btn"
+                    onClick={() => setWorkOrderJobId(results.job_id)}
+                  >
+                    📄 View Work Order
+                  </button>
                 )}
               </section>
             </div>
@@ -843,6 +862,12 @@ function App() {
 
         {toast && (
           <div className="toast">{toast}</div>
+        )}
+        {workOrderJobId && (
+          <WorkOrderModal
+            jobId={workOrderJobId}
+            onClose={() => setWorkOrderJobId(null)}
+          />
         )}
       </main>
     </div>

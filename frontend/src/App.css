@@ -1727,3 +1727,366 @@ body {
     grid-column: auto;
   }
 }
+
+/* ---------- Fair Wage Warning ---------- */
+.fair-wage {
+  padding: 12px 14px;
+  border-radius: 9px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+}
+
+.fair-wage-ok {
+  background: #f4faf6;
+  border: 1px solid #c8e0d0;
+}
+
+.fair-wage-yellow {
+  background: #fdf6e3;
+  border: 1px solid #f0e0b0;
+}
+
+.fair-wage-red {
+  background: #f7ebeb;
+  border: 1px solid #e0c5c5;
+}
+
+.fw-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.fw-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.fw-badge-ok {
+  background: #d9ebde;
+  color: #2d5a3d;
+}
+
+.fw-badge-yellow {
+  background: #f0e0b0;
+  color: #8a6500;
+}
+
+.fw-badge-red {
+  background: #e8c5c5;
+  color: #a63d3d;
+}
+
+.fw-compare {
+  font-family: Consolas, monospace;
+  font-size: 11.5px;
+  color: #6b6b6b;
+}
+
+.fw-message {
+  color: #2a2a2a;
+  line-height: 1.5;
+  margin: 6px 0;
+}
+
+.fw-suggest {
+  font-size: 11.5px;
+  color: #6b6b6b;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.fw-suggest strong {
+  color: #2d5a3d;
+}
+
+/* ---------- Work Order Modal ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 14px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e8e5dc;
+}
+
+.modal-head h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b6b6b;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 8px;
+}
+
+.modal-loading {
+  padding: 40px;
+  text-align: center;
+  color: #6b6b6b;
+}
+
+/* Work Order */
+.work-order {
+  padding: 24px;
+}
+
+.wo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 18px;
+  border-bottom: 2px solid #2d5a3d;
+  margin-bottom: 18px;
+}
+
+.wo-brand {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2d5a3d;
+  letter-spacing: -0.3px;
+}
+
+.wo-sub {
+  font-size: 11px;
+  color: #9a9a9a;
+  margin-top: 2px;
+}
+
+.wo-meta {
+  text-align: right;
+}
+
+.wo-id {
+  font-family: Consolas, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.wo-date {
+  font-size: 11px;
+  color: #9a9a9a;
+  margin-top: 2px;
+}
+
+.wo-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.wo-job {
+  grid-template-columns: repeat(4, 1fr);
+  background: #faf9f5;
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.wo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wo-field span {
+  font-size: 10.5px;
+  color: #6b6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.wo-field strong {
+  font-size: 13.5px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.wo-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 18px;
+}
+
+.wo-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 10.5px;
+  color: #6b6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e8e5dc;
+}
+
+.wo-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0ece0;
+  font-size: 13px;
+  vertical-align: top;
+}
+
+.wo-table td strong {
+  color: #1a1a1a;
+  font-size: 13px;
+}
+
+.wo-detail {
+  font-size: 11px;
+  color: #9a9a9a;
+  margin-top: 3px;
+}
+
+.wo-amount {
+  text-align: right;
+  font-family: Consolas, monospace;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.wo-total {
+  padding: 16px;
+  background: #faf9f5;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.wo-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.wo-total-row span {
+  color: #6b6b6b;
+}
+
+.wo-total-final {
+  border-top: 1px solid #e8e5dc;
+  margin-top: 8px;
+  padding-top: 12px;
+  font-size: 16px;
+}
+
+.wo-total-final strong {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.in-budget {
+  color: #2d5a3d;
+}
+
+.over-budget {
+  color: #a63d3d;
+}
+
+.wo-budget-note {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+.wo-budget-note.ok {
+  background: #e8f0e9;
+  color: #2d5a3d;
+}
+
+.wo-budget-note.warn {
+  background: #f7ebeb;
+  color: #a63d3d;
+}
+
+.wo-notes {
+  font-size: 11px;
+  color: #9a9a9a;
+  font-family: Consolas, monospace;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.wo-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.wo-btn-primary,
+.wo-btn-secondary {
+  padding: 10px 20px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.wo-btn-primary {
+  background: #2d5a3d;
+  color: #fff;
+  border: none;
+}
+
+.wo-btn-primary:hover {
+  background: #244a32;
+}
+
+.wo-btn-secondary {
+  background: #fff;
+  color: #6b6b6b;
+  border: 1px solid #e8e5dc;
+}
+
+.wo-btn-secondary:hover {
+  background: #faf9f5;
+}
+
+.work-order-btn {
+  margin-top: 14px;
+  width: 100%;
+}
+
+@media print {
+  .modal-overlay { position: static; background: none; }
+  .modal { max-width: none; box-shadow: none; }
+  .modal-head, .modal-close, .wo-actions { display: none; }
+}

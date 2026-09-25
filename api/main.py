@@ -410,3 +410,128 @@ def research_group(req: GroupRequest):
         'baseline_skill': skill,
         'wage_estimate': wage,
     }
+
+# ============================================================
+# Fair Wage Check
+# ============================================================
+class FairWageRequest(BaseModel):
+    required_skill: str
+    num_workers_needed: int
+    budget: int
+    duration_hours: int = 8
+
+
+@app.post("/research/fair-wage")
+def fair_wage_check(req: FairWageRequest):
+    """
+    Compare the employer's offered wage against the market reference.
+    Returns a warning level and suggested adjustment.
+    """
+    market = research_services.estimate_wage(
+        required_skill=req.required_skill,
+        duration_hours=req.duration_hours,
+        num_workers=req.num_workers_needed,
+    )
+
+    offered_per_worker = req.budget / max(1, req.num_workers_needed)
+    market_per_worker = market['per_worker']
+    ratio = offered_per_worker / max(1, market_per_worker)
+
+    if ratio >= 0.9:
+        status = 'fair'
+        message = 'Offered wage is in line with the local market reference.'
+    elif ratio >= 0.75:
+        status = 'low'
+        message = (
+            f'Offered wage (₹{int(offered_per_worker)}/worker) is below the local '
+            f'market reference (₹{market_per_worker}/worker). Consider increasing '
+            f'the budget to attract skilled workers.'
+        )
+    else:
+        status = 'very_low'
+        message = (
+            f'Offered wage (₹{int(offered_per_worker)}/worker) is significantly below '
+            f'the local market reference (₹{market_per_worker}/worker). This may result '
+            f'in low worker acceptance.'
+        )
+
+    return {
+        'status': status,
+        'message': message,
+        'offered_per_worker': int(offered_per_worker),
+        'market_per_worker': market_per_worker,
+        'ratio': round(ratio, 2),
+        'market_total': market['total'],
+        'notes': market['notes'],
+    }
+
+# ============================================================
+# Digital Work Order / Bill
+# ============================================================
+class WorkOrderRequest(BaseModel):
+    job_id: int
+
+
+@app.post("/research/work-order")
+def generate_work_order(req: WorkOrderRequest, user: dict = Depends(get_current_user)):
+    """
+    Generate a digital work order with itemized costs.
+    Employer-only.
+    """
+    if user['role'] != 'employer':
+        raise HTTPException(status_code=403, detail="Only employers can generate work orders")
+
+    job = auth_module.get_job_by_id(req.job_id)
+    if not job or job['employer_id'] != user['id']:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # Labour cost
+    wage = research_services.estimate_wage(
+        required_skill=job['required_skill'],
+        duration_hours=job['duration_hours'],
+        num_workers=job['num_workers_needed'],
+    )
+
+    # Travel cost — assume avg 10 km per worker, ₹12/km round trip
+    travel_per_worker = 10 * research_services.RURAL_TRAVEL_COST_PER_KM * 2
+    total_travel = travel_per_worker * job['num_workers_needed']
+
+    # Platform fee — flat 2% of labour cost (informational)
+    platform_fee = int(wage['total'] * 0.02)
+    subtotal = wage['total'] + total_travel + platform_fee
+
+    return {
+        'work_order_id': f'WO-{job["id"]:05d}',
+        'issued_to': user['full_name'],
+        'issued_by': 'KaamSetu AI',
+        'job': {
+            'skill': job['required_skill'],
+            'num_workers': job['num_workers_needed'],
+            'budget': job['budget'],
+            'duration_hours': job['duration_hours'],
+            'status': job['status'],
+            'created_at': job['created_at'],
+        },
+        'line_items': [
+            {
+                'label': f"Labour — {job['num_workers_needed']} workers × {job['duration_hours']} hrs",
+                'detail': f"₹{wage['per_worker']} per worker",
+                'amount': wage['total'],
+            },
+            {
+                'label': f"Transport — {job['num_workers_needed']} workers (shared)",
+                'detail': f"~10 km per trip × ₹{research_services.RURAL_TRAVEL_COST_PER_KM}/km",
+                'amount': total_travel,
+            },
+            {
+                'label': 'Platform fee (informational)',
+                'detail': '2% of labour cost',
+                'amount': platform_fee,
+            },
+        ],
+        'subtotal': subtotal,
+        'budget': job['budget'],
+        'within_budget': subtotal <= job['budget'],
+        'generated_at': str(__import__('datetime').datetime.now()),
+        'notes': wage['notes'],
+    }

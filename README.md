@@ -1,816 +1,475 @@
-\# KaamSetu AI
+# KaamSetu AI
 
+**An Intelligent Distributed Platform for Real-Time Rural Workforce Matching, Wage Estimation, and Resource Coordination**
 
+A full-stack M.Tech research prototype demonstrating multi-constraint AI matching, adaptive distributed scheduling, wage estimation, and demand forecasting for rural workforce coordination.
 
-\*\*Adaptive Distributed AI-Based Rural Workforce Matching System\*\*
+**Author:** Sakshi (sakshipatil-25) · M.Tech Research · 2025–26
 
+**Live Deployment:** https://kaamsetu-frontend.onrender.com
 
+---
 
-A research prototype demonstrating how adaptive distributed workload management can improve real-time AI-based rural workforce matching compared with centralized and static distributed processing.
+## Table of Contents
 
+- [Research Objective](#research-objective)
+- [What This Platform Does](#what-this-platform-does)
+- [Live Demo](#live-demo)
+- [Key Features](#key-features)
+- [Research Design](#research-design)
+- [Experimental Results](#experimental-results)
+- [System Architecture](#system-architecture)
+- [Multi-Constraint Optimization](#multi-constraint-optimization)
+- [Technology Stack](#technology-stack)
+- [Repository Structure](#repository-structure)
+- [Getting Started](#getting-started)
+- [Running Experiments](#running-experiments)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
 
+---
 
-\*\*Author:\*\* Sakshi (sakshipatil-25) · M.Tech Research · 2025–26
+## Research Objective
 
+> **Can an AI-based multi-constraint matching and optimization model improve rural worker-employer matching by reducing total hiring cost, travel distance, and matching time while satisfying skill, availability, and workforce requirements?**
 
+The **AI matcher** (XGBoost + OR-Tools) is **frozen** and identical across all experiments. The single experimental variable is the **scheduling strategy**.
 
-\---
+---
 
+## What This Platform Does
 
+KaamSetu AI is an intelligent platform connecting rural workers with employers through:
 
-\## Table of Contents
+1. **AI-powered multi-constraint matching** — XGBoost predicts suitability, OR-Tools CP-SAT selects optimal groups
+2. **Adaptive distributed scheduling** — Apache Kafka streams jobs across multiple worker nodes with load-aware routing
+3. **Wage estimation** — Season and complexity-aware market wage prediction
+4. **Travel planning** — Groups workers by proximity into shared vehicles
+5. **Fair wage warnings** — Alerts employers when their offer is below market rate
+6. **Digital work orders** — Itemized invoices with labour, transport, and platform costs
+7. **Demand forecasting** — Predicts seasonal labour demand by skill category
+8. **Worker availability tracking** — Persistent day-by-day availability
 
+---
 
+## Live Demo
 
-\- \[Research Question](#research-question)
+**Try it now:** https://kaamsetu-frontend.onrender.com
 
-\- \[Overview](#overview)
+### Demo Accounts
 
-\- \[Key Results](#key-results)
-
-\- \[System Architecture](#system-architecture)
-
-\- \[AI Matching Pipeline](#ai-matching-pipeline)
-
-\- \[Three Scheduling Strategies](#three-scheduling-strategies)
-
-\- \[Tech Stack](#tech-stack)
-
-\- \[Repository Structure](#repository-structure)
-
-\- \[Getting Started](#getting-started)
-
-\- \[Running the Experiments](#running-the-experiments)
-
-\- \[Live Web Application](#live-web-application)
-
-\- \[Research Contribution](#research-contribution)
-
-\- \[Future Work](#future-work)
-
-\- \[License](#license)
-
-
-
-\---
-
-
-
-\## Research Question
-
-
-
-> \*\*Can adaptive distributed workload management improve the performance of real-time AI-based rural workforce matching compared with centralized and static distributed processing?\*\*
-
-
-
-The AI matcher (XGBoost + OR-Tools) is \*\*frozen\*\* and identical across all three experiments. The single experimental variable is the \*\*scheduling strategy\*\*.
-
-
-
-\---
-
-
-
-\## Overview
-
-
-
-Rural workers often struggle to find suitable employment based on skill, location, availability, expected wage, and transport options. Employers, meanwhile, need specific numbers of workers with particular skills within a fixed budget and time window. Traditional matching systems are manual or centralized and become slow under high request volumes.
-
-
-
-\*\*KaamSetu AI\*\* addresses this with:
-
-
-
-\- \*\*AI-based suitability prediction\*\* (XGBoost) for every worker-job pair
-
-\- \*\*Constraint-based optimization\*\* (OR-Tools CP-SAT) for group selection
-
-\- \*\*Real-time event streaming\*\* (Apache Kafka) for scalable ingestion
-
-\- \*\*Adaptive distributed scheduling\*\* that routes jobs to the least-loaded worker node based on live CPU, queue length, and latency
-
-
-
-The system is validated through a controlled three-way benchmark: \*\*Centralized vs Static Distributed vs Adaptive Distributed\*\*.
-
-
-
-\---
-
-
-
-\## Key Results
-
-
-
-Measured across real distributed Kafka experiments:
-
-
-
-| Metric | Centralized | Static Distributed | Adaptive Distributed |
-
+| Role | Email | Password | Can Do |
 |---|---|---|---|
+| **Employer** | `employer@demo.com` | `demo123` | Post jobs, view AI matches, generate work orders, view demand forecast |
+| **Worker** | `worker@demo.com` | `demo123` | Browse jobs, accept work, update availability |
+| **Admin** | `admin@demo.com` | `demo123` | System statistics, user management, run simulations |
 
+> **Note:** Free-tier hosting sleeps after 15 minutes of inactivity. First request may take ~30–45 seconds to wake up.
+
+**API Docs:** https://kaamsetu-api-y0yc.onrender.com/docs
+
+---
+
+## Key Features
+
+### 1. AI-Powered Worker Matching
+
+Given a job request (skill, location, workers needed, budget, duration), the system:
+- Filters 1,000 workers by skill and distance
+- Scores each candidate with an XGBoost classifier (six features: skill match, distance, wage fit, experience, rating, transport availability)
+- Selects the optimal group using OR-Tools CP-SAT under skill, budget, and headcount constraints
+- Returns workers ranked by suitability score
+
+**Typical latency:** 15–25 ms per job
+
+### 2. Adaptive Distributed Scheduling
+
+Three scheduling strategies are implemented and experimentally compared:
+- **Centralized** — single worker node processes all jobs
+- **Static Distributed** — hash-based Kafka partitioning (job_id mod 3)
+- **Adaptive Distributed** — weighted dispatcher (0.5×CPU + 0.3×queue + 0.2×latency)
+
+### 3. Wage Estimation
+
+Predicts per-worker and total labour cost from:
+- **Base wage** by skill (e.g., farming_harvesting: ₹500, electrical: ₹850)
+- **Seasonal factor** (agricultural harvest peaks in Sep–Nov at ×1.2–1.4)
+- **Complexity factor** (short jobs ×0.9, medium ×1.0, long ×1.15)
+
+### 4. Travel Planning
+
+Uses the Haversine formula to compute distances, then:
+- Groups workers into shared vehicles (capacity 6)
+- Picks a centroid pickup point per vehicle
+- Estimates round-trip transportation cost (₹12/km)
+
+### 5. Fair Wage Warning
+
+Compares the employer's offered wage against the market reference. Flags:
+- **Green** if offer ≥ 90% of market
+- **Yellow** if 75–90% of market
+- **Red** if < 75% of market
+
+### 6. Digital Work Order
+
+Generates an itemized invoice with:
+- Labour cost (per-worker × count × hours)
+- Transportation cost (shared vehicle estimate)
+- Platform fee (2%, informational)
+- Budget comparison (within budget / exceeds by ₹X)
+- Print/PDF export
+
+### 7. Demand Forecasting
+
+Analyzes historical job data with seasonal multipliers to predict next-week demand by skill. Flags rising/stable/falling trends with confidence levels.
+
+### 8. Worker Availability
+
+Workers can mark which days they're available. Saves to SQLite and persists across sessions.
+
+### 9. Three-Role Access Control
+
+JWT-based authentication with three distinct interfaces:
+- **Employer** — job posting, matching, work orders, forecasting
+- **Worker** — job browsing, acceptance, availability
+- **Admin** — user management, system statistics, simulations
+
+### 10. Multi-Constraint Optimization with Baselines
+
+The proposed optimizer is benchmarked against two baselines:
+- **Nearest-Worker** — picks N nearest workers with the required skill
+- **Skill-Based** — picks top-rated workers with the required skill
+
+---
+
+## Research Design
+
+The study compares three scheduling strategies with an identical AI matcher:
+
+| Setup | Nodes | Scheduling Logic |
+|---|---|---|
+| Centralized | 1 | Single worker processes all jobs |
+| Static Distributed | 3 | Hash-based Kafka partitioning |
+| Adaptive Distributed | 3 | Weighted dispatcher (CPU + queue + latency) |
+
+### Evaluation Metrics
+
+**Distributed computing:**
+- End-to-end latency (average, maximum)
+- Throughput (jobs/sec)
+- CPU and memory utilization
+- Load imbalance across nodes
+- Scalability and network overhead
+
+**Matching quality:**
+- Matching success rate
+- Skill-match score
+- Constraint violations
+- Average travel distance
+- Total labour cost
+
+**Optimization:**
+- Wage savings vs baselines
+- Distance savings vs baselines
+
+---
+
+## Experimental Results
+
+### Scheduling Strategy Comparison
+
+| Metric | Centralized | Static | Adaptive |
+|---|---|---|---|
 | Nodes | 1 | 3 | 3 |
-
 | Average Latency | 21.10 ms | 23.71 ms | 24.65 ms |
-
-| Maximum Latency | \~40 ms | 123.18 ms | 119.13 ms |
-
-| Average CPU | 100% | 501% | \*\*411%\*\* |
-
-| Load Imbalance | — | 3.2% | \*\*2.1%\*\* |
-
+| Maximum Latency | ~40 ms | 123.18 ms | 119.13 ms |
+| Average CPU | 100% | 501% | **411%** |
+| Load Imbalance | — | 3.2% | **2.1%** |
 | Jobs Processed | 1,550 | 6,250 | 1,874 |
 
+**Key findings:**
+- Adaptive scheduling reduces CPU usage by ~18% compared to static (411% vs 501%)
+- Adaptive achieves 2.1% load imbalance vs static's 3.2%
+- Adaptive caps tail latency better (119 ms vs 123 ms)
+- Centralized achieves lowest per-job latency but no horizontal scaling
 
+### Multi-Constraint Optimization vs Baselines
 
-\### Key Findings
+Sample comparison (3 workers, painting job, ₹5,000 budget):
 
+| Strategy | Workers | Total Wage | Avg Distance |
+|---|---|---|---|
+| **Multi-Constraint AI** (proposed) | 3 | ₹1,786 | 7.21 km |
+| Nearest Worker | 3 | ₹2,355 | 3.83 km |
+| Skill-Based | 3 | ₹1,862 | — |
 
+**Finding:** The proposed multi-constraint optimizer reduces total wage by ~24% vs the nearest-worker baseline and ~4% vs the skill-based baseline, while maintaining acceptable distance.
 
-\- \*\*Adaptive scheduling reduces CPU usage by \~18%\*\* compared with static distribution (411% vs 501%).
+---
 
-\- \*\*Load imbalance halves at peak\*\* (2.1% vs 3.2%), demonstrating better workload distribution.
-
-\- \*\*Tail latency improves\*\* — adaptive caps maximum latency at 119 ms vs static's 123 ms.
-
-\- \*\*Static is marginally faster on average latency\*\* (23.71 ms vs 24.65 ms), but degrades sharply as job complexity varies.
-
-\- \*\*Matching quality remains constant\*\* across all three setups, confirming that only the scheduling strategy changed.
-
-
-
-\---
-
-
-
-\## System Architecture
-
-
+## System Architecture
 
 ```
-
-┌──────────────────┐
-
-│  Load Generator  │   100 – 5000 requests/sec
-
-└────────┬─────────┘
-
-&#x20;        │
-
-&#x20;        ▼
-
-┌──────────────────┐
-
-│   Apache Kafka   │   3 topic partitions
-
-└────────┬─────────┘
-
-&#x20;        │
-
-&#x20;        ▼
-
-┌──────────────────────────────────────────┐
-
-│  Worker Nodes (1 or 3)                    │
-
-│  ┌────────────┐  ┌────────────┐  ┌─────┐ │
-
-│  │  XGBoost   │  │  OR-Tools  │  │ ... │ │
-
-│  │  +         │  │  CP-SAT    │  │     │ │
-
-│  │  OR-Tools  │  │            │  │     │ │
-
-│  └────────────┘  └────────────┘  └─────┘ │
-
-└────────┬─────────────────────────────────┘
-
-&#x20;        │
-
-&#x20;        ▼
-
-┌──────────────────┐
-
-│  Storage Layer   │   PostgreSQL (results)  ·  Redis (metrics)
-
-└──────────────────┘
-
+                     ┌──────────────────────┐
+                     │   React Frontend     │
+                     │  (Landing + App + Auth)
+                     └──────────┬───────────┘
+                                │ REST API
+                                ▼
+                     ┌──────────────────────┐
+                     │   FastAPI Backend    │
+                     │  ┌────────────────┐  │
+                     │  │ XGBoost +      │  │
+                     │  │ OR-Tools       │  │
+                     │  └────────────────┘  │
+                     │  ┌────────────────┐  │
+                     │  │ Research       │  │
+                     │  │ Services       │  │
+                     │  │ (Wage, Travel, │  │
+                     │  │  Forecast)     │  │
+                     │  └────────────────┘  │
+                     └──────────┬───────────┘
+                                │
+                     ┌──────────┴───────────┐
+                     │   SQLite (users,     │
+                     │    jobs, availability)
+                     └──────────────────────┘
 ```
 
-
-
-\---
-
-
-
-\## AI Matching Pipeline
-
-
-
-Every job request flows through three stages:
-
-
-
-\### 1. XGBoost Suitability Classifier
-
-Predicts a worker-job suitability score (0–1) from six features:
-
-\- Skill match
-
-\- Geographic distance
-
-\- Wage fit
-
-\- Years of experience
-
-\- Worker rating
-
-\- Transport availability
-
-
-
-\### 2. OR-Tools CP-SAT Optimizer
-
-Solves a constrained optimization problem:
-
-\- Select exactly \*\*N\*\* workers
-
-\- Total wage must stay within the \*\*budget\*\*
-
-\- Maximize aggregate suitability across the selected group
-
-
-
-\### 3. Adaptive Dispatcher
-
-Routes each job to the least-loaded worker node using a weighted score:
-
-
-
+**Experimental setup (local + deployable via Docker):**
+```
+Load Generator → Apache Kafka (3 partitions) → Worker Nodes (1 or 3)
+                                                    ↓
+                                          PostgreSQL + Redis
 ```
 
-score = 0.5 × CPU + 0.3 × queue\_length + 0.2 × recent\_latency
+---
+
+## Multi-Constraint Optimization
+
+The core research algorithm minimizes:
 
 ```
+Cost = α·W + β·D + γ·T + δ·M
+```
 
+Where:
+- `W` = total wage
+- `D` = travel distance
+- `T` = transportation cost
+- `M` = mismatch penalty
 
+**Subject to:**
+- `WorkersSelected = WorkersRequired`
+- `SkillMatch ≥ RequiredSkill`
+- `Availability = 1`
+- Gender ratio constraints (optional)
+- Distance ≤ max_distance_km
 
-The node with the lowest score receives the job.
+The optimizer uses a scoring function:
+```
+score(w) = 0.5 × expected_wage + 0.3 × distance × 100 + 0.2 × (5 - rating) × 100
+```
 
+Workers with the lowest scores are selected.
 
+---
 
-\---
-
-
-
-\## Three Scheduling Strategies
-
-
-
-| Strategy | Nodes | Scheduling Logic |
-
-|---|---|---|
-
-| \*\*Centralized\*\* | 1 | No distribution — a single worker processes all jobs. Baseline. |
-
-| \*\*Static Distributed\*\* | 3 | Hash-based Kafka partitioning (`job\_id mod 3`). Jobs pinned to partitions. |
-
-| \*\*Adaptive Distributed\*\* | 3 | Dispatcher routes each job to the least-loaded node using weighted metrics. \*\*Proposed approach.\*\* |
-
-
-
-The AI matcher is identical in all three. Only the scheduling strategy changes.
-
-
-
-\---
-
-
-
-\## Tech Stack
-
-
+## Technology Stack
 
 | Layer | Technology |
-
 |---|---|
+| **AI / ML** | XGBoost 2.1.2 |
+| **Optimization** | Google OR-Tools 9.12 (CP-SAT) |
+| **Event Streaming** | Apache Kafka 4.3 |
+| **Distributed Nodes** | Docker containers |
+| **Data Storage** | SQLite (users/jobs), PostgreSQL 16 (experimental metrics), Redis 7 |
+| **Backend API** | FastAPI · Uvicorn |
+| **Authentication** | JWT (PyJWT) · bcrypt |
+| **Frontend** | React 19 · Vite · React Router |
+| **Language** | Python 3.13 |
+| **Containerization** | Docker · Docker Compose |
+| **Deployment** | Render (backend + static frontend) |
 
-| AI / ML | XGBoost 2.1.2 |
+---
 
-| Optimization | Google OR-Tools 9.12 (CP-SAT) |
-
-| Event Streaming | Apache Kafka 4.3 |
-
-| Distributed Nodes | Docker containers |
-
-| Storage | PostgreSQL 16 · Redis 7 |
-
-| Backend API | FastAPI · Uvicorn |
-
-| Frontend | React 19 · Vite |
-
-| Language | Python 3.13 |
-
-| Containerization | Docker · Docker Compose |
-
-| Deployment | Render |
-
-
-
-\---
-
-
-
-\## Repository Structure
-
-
+## Repository Structure
 
 ```
-
 kaamsetu-ai/
-
-├── api/                          FastAPI backend for the web app
-
-│   ├── main.py                   API endpoints (/match, /simulate, /experiments)
-
-│   └── simulator.py              In-memory simulation engine
-
+├── api/                          FastAPI backend
+│   ├── main.py                   All API endpoints
+│   ├── auth.py                   JWT auth + users/jobs DB
+│   ├── services.py               Research services (wage, travel, matching)
+│   └── simulator.py              In-memory scheduling simulator
 │
-
 ├── src/                          Core research code
-
-│   ├── data\_generator.py         Synthetic worker and job data
-
-│   ├── xgboost\_model.py          AI suitability model training
-
-│   ├── or\_tools\_matcher.py       CP-SAT worker selection
-
-│   ├── worker.py                 Kafka-based worker (static experiments)
-
-│   ├── worker\_adaptive.py        Redis-queue worker (adaptive experiments)
-
-│   ├── dispatcher.py             Adaptive scheduler (research contribution)
-
-│   ├── load\_generator.py         Synthetic request generator
-
-│   ├── metrics\_collector.py      Performance measurement
-
-│   └── plot\_results.py           Comparison charts
-
+│   ├── data_generator.py         Synthetic worker/job data
+│   ├── xgboost_model.py          AI suitability training
+│   ├── or_tools_matcher.py       CP-SAT worker selection
+│   ├── worker.py                 Kafka-based worker (static)
+│   ├── worker_adaptive.py        Redis-queue worker (adaptive)
+│   ├── dispatcher.py             Adaptive scheduler
+│   ├── load_generator.py         Request generator
+│   ├── metrics_collector.py      Performance measurement
+│   └── plot_results.py           Comparison charts
 │
-
-├── frontend/                     React research dashboard
-
-│   ├── src/
-
-│   │   ├── App.jsx               5-tab dashboard
-
-│   │   └── App.css               Astra-inspired theme
-
-│   └── package.json
-
+├── frontend/                     React dashboard
+│   └── src/
+│       ├── Landing.jsx           Marketing landing page
+│       ├── Login.jsx             Authentication
+│       ├── Signup.jsx            Registration
+│       ├── App.jsx               Main dashboard (role-based)
+│       ├── ResearchPanels.jsx    Wage / Travel / Group matching panels
+│       ├── FairWagePanel.jsx     Fair wage warning
+│       ├── WorkOrderModal.jsx    Digital work order
+│       ├── DemandForecast.jsx    Forecast page
+│       └── auth.js               Auth helpers + JWT storage
 │
-
+├── data/                         Generated datasets
+│   ├── workers.csv               1,000 workers (13 skills, gender, age)
+│   ├── jobs.csv                  500 jobs
+│   └── users.db                  SQLite (users + jobs + availability)
+│
+├── models/                       Trained AI model
+│   └── xgboost_suitability.pkl   Frozen XGBoost model
+│
+├── results/                      Experiment outputs
+│   ├── centralized_metrics.csv
+│   ├── static_metrics.csv
+│   ├── adaptive_metrics.csv
+│   └── comparison_plots.png
+│
 ├── docker-compose.yml            Kafka + PostgreSQL + Redis
-
 ├── Dockerfile                    Backend container
-
 ├── requirements.txt              Full research dependencies
-
 ├── requirements-api.txt          API-only dependencies
-
-├── generate\_ppt.py               Presentation generator script
-
+├── generate_ppt.py               Presentation generator
 └── README.md
-
 ```
 
+---
 
+## Getting Started
 
-\---
+### Prerequisites
 
+- Python 3.13
+- Docker Desktop
+- Node.js 18+
+- Git
 
-
-\## Getting Started
-
-
-
-\### Prerequisites
-
-
-
-\- \*\*Python 3.13\*\* (earlier versions may not have pre-built wheels for all dependencies)
-
-\- \*\*Docker Desktop\*\* (with Docker Compose)
-
-\- \*\*Node.js 18+\*\* (for the frontend)
-
-\- \*\*Git\*\*
-
-
-
-\### Setup
-
-
+### Setup
 
 ```bash
-
-\# Clone the repository
-
+# Clone the repository
 git clone https://github.com/sakshipatil-25/kaamsetu-ai.git
-
 cd kaamsetu-ai
 
-
-
-\# Create and activate a virtual environment
-
+# Create and activate a Python virtual environment
 python -m venv .venv
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # macOS/Linux
 
-
-
-\# Windows
-
-.venv\\Scripts\\activate
-
-\# macOS/Linux
-
-\# source .venv/bin/activate
-
-
-
-\# Install Python dependencies
-
+# Install Python dependencies
 pip install -r requirements.txt
 
+# Generate synthetic data (only needed once)
+python src\data_generator.py
+
+# Train the XGBoost model (only needed once)
+python src\xgboost_model.py
 ```
 
+### Run Locally
 
-
-\### Start Infrastructure
-
-
-
+**Terminal 1 — Backend:**
 ```bash
-
-\# Start Kafka, PostgreSQL, and Redis
-
-docker compose up -d
-
-```
-
-
-
-Wait \~30 seconds, then create the Kafka topic:
-
-
-
-```bash
-
-docker exec -it kaamsetu-kafka /opt/kafka/bin/kafka-topics.sh \\
-
-&#x20; --bootstrap-server localhost:9092 \\
-
-&#x20; --create --topic job-events --partitions 3 --replication-factor 1
-
-```
-
-
-
-\### Generate Data and Train the Model
-
-
-
-```bash
-
-\# Generate synthetic workers and jobs
-
-python src\\data\_generator.py
-
-
-
-\# Train the XGBoost suitability model
-
-python src\\xgboost\_model.py
-
-
-
-\# Verify the matcher works
-
-python src\\or\_tools\_matcher.py
-
-```
-
-
-
-\---
-
-
-
-\## Running the Experiments
-
-
-
-\### Centralized (1 Worker)
-
-
-
-\*\*Terminal 1 — Worker:\*\*
-
-```bash
-
-python src\\worker.py
-
-```
-
-
-
-\*\*Terminal 2 — Load Generator:\*\*
-
-```bash
-
-python src\\load\_generator.py 50 30
-
-```
-
-
-
-\*\*Terminal 3 — Metrics Collector:\*\*
-
-```bash
-
-python src\\metrics\_collector.py 40 results\\centralized\_metrics.csv
-
-```
-
-
-
-\### Static Distributed (3 Workers)
-
-
-
-\*\*Terminals 1–3 — Workers on fixed partitions:\*\*
-
-```bash
-
-set WORKER\_NAME=worker-1
-
-set PARTITION\_ID=0
-
-python src\\worker.py
-
-
-
-\# Repeat with worker-2/partition 1 and worker-3/partition 2
-
-```
-
-
-
-\*\*Terminal 4 — Metrics Collector:\*\*
-
-```bash
-
-python src\\metrics\_collector.py 40 results\\static\_metrics.csv
-
-```
-
-
-
-\*\*Terminal 5 — Load Generator:\*\*
-
-```bash
-
-python src\\load\_generator.py 50 30
-
-```
-
-
-
-\### Adaptive Distributed (3 Workers + Dispatcher)
-
-
-
-\*\*Terminals 1–3 — Adaptive workers:\*\*
-
-```bash
-
-set WORKER\_NAME=worker-1
-
-python src\\worker\_adaptive.py
-
-
-
-\# Repeat for worker-2 and worker-3
-
-```
-
-
-
-\*\*Terminal 4 — Adaptive Dispatcher:\*\*
-
-```bash
-
-python src\\dispatcher.py
-
-```
-
-
-
-\*\*Terminal 5 — Metrics Collector:\*\*
-
-```bash
-
-python src\\metrics\_collector.py 40 results\\adaptive\_metrics.csv
-
-```
-
-
-
-\*\*Terminal 6 — Load Generator:\*\*
-
-```bash
-
-python src\\load\_generator.py 50 30
-
-```
-
-
-
-\### Generate Comparison Plots
-
-
-
-```bash
-
-python src\\plot\_results.py
-
-```
-
-
-
-This produces `results/comparison\_plots.png`.
-
-
-
-\---
-
-
-
-\## Live Web Application
-
-
-
-\### Run Locally
-
-
-
-\*\*Terminal 1 — Backend:\*\*
-
-```bash
-
 uvicorn api.main:app --reload --port 8000
-
 ```
 
-
-
-\*\*Terminal 2 — Frontend:\*\*
-
+**Terminal 2 — Frontend:**
 ```bash
-
 cd frontend
-
 npm install
-
 npm run dev
-
 ```
-
-
 
 Open `http://localhost:5173`.
 
+---
 
+## Running Experiments
 
-\### Deployed Version
+### Centralized Baseline
 
+```bash
+# Terminal 1
+python src\worker.py
 
+# Terminal 2
+python src\load_generator.py 50 30
 
-\- \*\*Frontend:\*\* \_\[add Render URL after deployment]\_
+# Terminal 3
+python src\metrics_collector.py 40 results\centralized_metrics.csv
+```
 
-\- \*\*API Docs:\*\* \_\[add Render URL after deployment]\_
+### Static Distributed
 
+```bash
+# Terminals 1-3 (one per partition)
+set WORKER_NAME=worker-1
+set PARTITION_ID=0
+python src\worker.py
+# Repeat for worker-2/partition 1, worker-3/partition 2
+```
 
+### Adaptive Distributed
 
-> \*\*Note:\*\* Free-tier hosting spins down after 15 minutes of inactivity. The first request may take \~30 seconds to wake up.
+```bash
+# Terminals 1-3
+set WORKER_NAME=worker-1
+python src\worker_adaptive.py
+# Repeat for worker-2 and worker-3
 
+# Terminal 4 — Dispatcher
+python src\dispatcher.py
 
+# Terminal 5 — Load
+python src\load_generator.py 50 30
+```
 
-\### Dashboard Sections
+### Generate Comparison Plots
 
+```bash
+python src\plot_results.py
+```
 
+Produces `results/comparison_plots.png`.
 
-| Section | Purpose |
+---
 
+## Documentation
+
+| Document | Purpose |
 |---|---|
+| `README.md` | This file — project overview |
+| `KaamSetu_AI_Presentation.pptx` | Research presentation (14 slides) |
+| `/docs` (Swagger) | Interactive API explorer |
+| Source code comments | Inline documentation |
 
-| \*\*Match Workers\*\* | Submit a job, view AI-matched workers with suitability scores |
+---
 
-| \*\*Live Simulation\*\* | Run all three scheduling strategies side-by-side |
+## Contributing
 
-| \*\*Research Results\*\* | View aggregated metrics from real distributed runs |
+This is a research prototype. For questions or collaboration:
 
-| \*\*Architecture\*\* | Design overview of the three strategies |
+- Open an issue on GitHub
+- Contact the author via the email listed in commits
 
-| \*\*How It Works\*\* | End-to-end pipeline explanation with real-world use cases |
+---
 
+## License
 
-
-\---
-
-
-
-\## Research Contribution
-
-
-
-1\. \*\*Novel adaptive scheduling mechanism\*\* — a weighted metric-driven dispatcher (CPU + queue + latency) applied to AI-based workforce matching.
-
-
-
-2\. \*\*Measurable performance improvement\*\* — \~18% reduction in aggregate CPU usage, load imbalance halved at peak (2.1% vs 3.2%), and improved tail latency.
-
-
-
-3\. \*\*Clean three-way benchmark\*\* — a frozen AI matcher isolates the scheduling strategy as the sole experimental variable.
-
-
-
-4\. \*\*Open-source research prototype\*\* — complete source code, working web application, and reproducible deployment.
-
-
-
-\### What This Is Not
-
-
-
-This is not merely a job-matching app. The AI matching component is intentionally frozen and identical across all experiments. The contribution is the \*\*distributed workload management strategy\*\*, evaluated against centralized and static baselines.
-
-
-
-\---
-
-
-
-\## Future Work
-
-
-
-\- Deploy on AWS for real cloud-scale benchmarking across regions
-
-\- Integrate Apache Spark Structured Streaming for larger workloads
-
-\- Extend to multi-region scheduling and A/B model deployment
-
-\- Explore reinforcement learning for the dispatcher policy
-
-\- Incorporate real anonymized survey data (with consent) to replace synthetic data
-
-
-
-\---
-
-
-
-\## License
-
-
-
-This project is released under the \*\*MIT License\*\*. See `LICENSE` for details.
-
-
-
-\---
-
-
-
-\## Contact
-
-
-
-\*\*Author:\*\* Sakshi  
-
-\*\*GitHub:\*\* \[@sakshipatil-25](https://github.com/sakshipatil-25)  
-
-\*\*Email:\*\* patilsakshi8008@gmail.com
-
-
-
-For research inquiries, please open an issue on GitHub.
-
+MIT License — see `LICENSE` file for details.
